@@ -24,6 +24,12 @@ jest.mock('../src/modules/auth/auth.service', () => ({
   }
 }));
 
+jest.mock('../src/config/prisma', () => ({
+  prisma: {
+    $queryRaw: jest.fn().mockResolvedValue([{ '?column?': 1 }])
+  }
+}));
+
 const mockAuthService = authService as jest.Mocked<typeof authService>;
 
 describe('Traveloop API', () => {
@@ -34,10 +40,11 @@ describe('Traveloop API', () => {
   it('returns the health response contract', async () => {
     const response = await request(app).get('/health').expect(200);
 
-    expect(response.body).toEqual({
-      data: { status: 'ok' },
+    expect(response.body).toMatchObject({
+      data: { status: 'ok', database: 'ok' },
       meta: null
     });
+    expect(response.body.data.uptimeSeconds).toEqual(expect.any(Number));
   });
 
   it('sets the JWT in an HttpOnly cookie on login', async () => {

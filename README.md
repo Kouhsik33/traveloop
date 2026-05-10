@@ -50,6 +50,8 @@ CLOUDINARY_API_SECRET="..."
 RESEND_API_KEY="..."
 ```
 
+If `GEMINI_API_KEY` is missing or Gemini fails, AI endpoints return curated fallback data.
+
 Do not commit `.env`. It is already ignored by `.gitignore`.
 
 ## Local Setup
@@ -206,7 +208,7 @@ http://localhost:3000/api/v1
 
 | Method | Path | Auth | Description |
 | --- | --- | --- | --- |
-| `GET` | `/health` | No | Health check |
+| `GET` | `/health` | No | Health check with DB status and uptime |
 
 ### Auth
 
@@ -306,6 +308,17 @@ Only `activityId` is required.
 | `DELETE` | `/api/v1/trips/:id` | Yes | Soft delete owned trip |
 | `PUT` | `/api/v1/trips/:id/publish` | Yes | Publish/unpublish trip |
 | `GET` | `/api/v1/trips/:id/budget` | Yes | Get budget summary |
+| `GET` | `/api/v1/trips/:id/notes` | Yes | List trip notes |
+| `POST` | `/api/v1/trips/:id/notes` | Yes | Create trip note |
+| `PUT` | `/api/v1/trips/:id/notes/:noteId` | Yes | Update trip note |
+| `DELETE` | `/api/v1/trips/:id/notes/:noteId` | Yes | Delete trip note |
+| `GET` | `/api/v1/trips/:id/packing-items` | Yes | List packing items |
+| `POST` | `/api/v1/trips/:id/packing-items` | Yes | Create packing item |
+| `PUT` | `/api/v1/trips/:id/packing-items/:itemId` | Yes | Update packing item |
+| `DELETE` | `/api/v1/trips/:id/packing-items/:itemId` | Yes | Delete packing item |
+| `GET` | `/api/v1/trips/:id/media` | Yes | List media records |
+| `POST` | `/api/v1/trips/:id/media` | Yes | Create media record |
+| `DELETE` | `/api/v1/trips/:id/media/:mediaId` | Yes | Delete media record |
 
 Trip list query params:
 
@@ -385,6 +398,74 @@ Reorder body:
 }
 ```
 
+### Notes
+
+Create note body:
+
+```json
+{
+  "stopId": "optional-stop-uuid",
+  "title": "Documents",
+  "content": "Carry ID and booking confirmations",
+  "noteType": "general",
+  "isImportant": true
+}
+```
+
+### Packing
+
+Create packing item body:
+
+```json
+{
+  "name": "Power bank",
+  "category": "electronics",
+  "isPacked": false
+}
+```
+
+### Media
+
+| Method | Path | Auth | Description |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/media/sign` | Yes | Sign Cloudinary upload |
+
+Sign upload body:
+
+```json
+{
+  "folder": "traveloop",
+  "resourceType": "auto"
+}
+```
+
+Create media record body:
+
+```json
+{
+  "stopId": "optional-stop-uuid",
+  "mediaType": "photo",
+  "cloudinaryUrl": "https://res.cloudinary.com/demo/image/upload/sample.jpg",
+  "cloudinaryId": "traveloop/sample",
+  "caption": "Sample upload"
+}
+```
+
+### AI
+
+| Method | Path | Auth | Description |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/ai/itinerary` | Yes | Generate itinerary with Gemini/fallback |
+| `POST` | `/api/v1/ai/packing` | Yes | Generate packing list with Gemini/fallback |
+| `POST` | `/api/v1/ai/budget-estimate` | Yes | Generate per-day budget estimate with Gemini/fallback |
+
+### Docs
+
+| Method | Path | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/docs` | No | Lightweight API docs page |
+| `GET` | `/api/v1/docs/openapi.json` | No | OpenAPI JSON summary |
+
 ### Public
 
 | Method | Path | Auth | Description |
@@ -402,20 +483,24 @@ Implemented:
 - Activities
 - Public trip sharing
 - Budget aggregation
+- Notes
+- Packing items
+- Media signing and media records
+- AI itinerary, packing, and budget estimate endpoints with fallback
+- Lightweight API docs at `/api/v1/docs`
+- Health response with DB status and uptime
 - Cookie auth and origin guard
 - Jest/Supertest route contract tests
 - Manual `.http` API test file
 
 Pending from the implementation playbook:
 
-- AI module
-- Media/Cloudinary signature module
-- Notes module
-- Packing module
-- OpenAPI/Swagger docs at `/api/v1/docs`
+- Full Swagger UI package integration, if the team requires interactive Swagger rather than lightweight docs/OpenAPI JSON
 - Full real-database integration tests for every `400/401/403/404` path
 - Larger seed data target: 50+ cities and 200+ activities
-- Health response with DB status and uptime
+- City full-text `search_vector` generated column and GIN index refinements
+- Stop date conflict validation across neighboring stops
+- Public slug collision retry loop
 
 ## Production Notes
 

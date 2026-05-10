@@ -149,6 +149,118 @@ Content-Type: application/json
 ### Trip Budget
 GET {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/budget
 
+### Create Note
+# @name createNote
+POST {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/notes
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "title": "Documents",
+  "content": "Carry ID and booking confirmations",
+  "noteType": "general",
+  "isImportant": true
+}
+
+### Notes List
+GET {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/notes
+
+### Update Note
+PUT {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/notes/{{createNote.response.body.$.data.id}}
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "content": "Carry ID, booking confirmations, and insurance copy"
+}
+
+### Create Packing Item
+# @name createPackingItem
+POST {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/packing-items
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "name": "Power bank",
+  "category": "electronics"
+}
+
+### Packing Items List
+GET {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/packing-items
+
+### Update Packing Item
+PUT {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/packing-items/{{createPackingItem.response.body.$.data.id}}
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "isPacked": true
+}
+
+### Sign Cloudinary Upload
+POST {{baseUrl}}/api/v1/media/sign
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "folder": "traveloop",
+  "resourceType": "auto"
+}
+
+### Create Media Record
+# @name createMedia
+POST {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/media
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "mediaType": "photo",
+  "cloudinaryUrl": "https://res.cloudinary.com/demo/image/upload/sample.jpg",
+  "cloudinaryId": "traveloop/sample",
+  "caption": "Sample upload"
+}
+
+### Media List
+GET {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/media
+
+### AI Itinerary
+POST {{baseUrl}}/api/v1/ai/itinerary
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "prompt": "Rajasthan heritage trip",
+  "days": 3,
+  "vibe": "comfort",
+  "tripType": "solo"
+}
+
+### AI Packing
+POST {{baseUrl}}/api/v1/ai/packing
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "destination": "Jaipur",
+  "days": 3,
+  "tripType": "solo",
+  "season": "winter"
+}
+
+### AI Budget Estimate
+POST {{baseUrl}}/api/v1/ai/budget-estimate
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "cityId": "{{cityId}}",
+  "cityName": "Delhi",
+  "vibe": "comfort"
+}
+
+### API Docs JSON
+GET {{baseUrl}}/api/v1/docs/openapi.json
+
 ### Publish Trip
 # @name publishTrip
 PUT {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/publish
@@ -164,6 +276,18 @@ GET {{baseUrl}}/api/v1/public/trips/{{publishTrip.response.body.$.data.publicSlu
 
 ### Remove Activity From Stop
 DELETE {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/stops/{{createStop.response.body.$.data.id}}/activities/{{assignActivity.response.body.$.data.id}}
+Origin: {{frontendOrigin}}
+
+### Delete Media
+DELETE {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/media/{{createMedia.response.body.$.data.id}}
+Origin: {{frontendOrigin}}
+
+### Delete Packing Item
+DELETE {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/packing-items/{{createPackingItem.response.body.$.data.id}}
+Origin: {{frontendOrigin}}
+
+### Delete Note
+DELETE {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/notes/{{createNote.response.body.$.data.id}}
 Origin: {{frontendOrigin}}
 
 ### Delete Stop

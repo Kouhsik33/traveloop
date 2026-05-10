@@ -3,8 +3,12 @@ import request from 'supertest';
 import { app } from '../src/server';
 import { env } from '../src/config/env';
 import { activitiesService } from '../src/modules/activities/activities.service';
+import { aiService } from '../src/modules/ai/ai.service';
 import { authService } from '../src/modules/auth/auth.service';
 import { citiesService } from '../src/modules/cities/cities.service';
+import { mediaService } from '../src/modules/media/media.service';
+import { notesService } from '../src/modules/notes/notes.service';
+import { packingService } from '../src/modules/packing/packing.service';
 import { publicService } from '../src/modules/public/public.service';
 import { stopsService } from '../src/modules/stops/stops.service';
 import { tripsService } from '../src/modules/trips/trips.service';
@@ -85,6 +89,37 @@ const stopActivity = {
   isCompleted: false
 };
 
+const note = {
+  id: '77777777-7777-4777-8777-777777777777',
+  tripId: trip.id,
+  stopId: null,
+  title: 'Visa notes',
+  content: 'Carry ID',
+  noteType: 'general',
+  isImportant: false,
+  createdAt: '2026-05-10T00:00:00.000Z'
+};
+
+const packingItem = {
+  id: '88888888-8888-4888-8888-888888888888',
+  tripId: trip.id,
+  name: 'Power bank',
+  category: 'electronics',
+  isPacked: false,
+  aiSuggested: false
+};
+
+const mediaUpload = {
+  id: '99999999-9999-4999-8999-999999999999',
+  tripId: trip.id,
+  stopId: null,
+  mediaType: 'photo' as const,
+  cloudinaryUrl: 'https://res.cloudinary.com/demo/image/upload/sample.jpg',
+  cloudinaryId: 'traveloop/sample',
+  caption: null,
+  createdAt: '2026-05-10T00:00:00.000Z'
+};
+
 jest.mock('../src/modules/auth/auth.service', () => ({
   authService: {
     register: jest.fn(),
@@ -139,12 +174,57 @@ jest.mock('../src/modules/public/public.service', () => ({
   }
 }));
 
+jest.mock('../src/modules/notes/notes.service', () => ({
+  notesService: {
+    list: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn()
+  }
+}));
+
+jest.mock('../src/modules/packing/packing.service', () => ({
+  packingService: {
+    list: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn()
+  }
+}));
+
+jest.mock('../src/modules/media/media.service', () => ({
+  mediaService: {
+    signUpload: jest.fn(),
+    list: jest.fn(),
+    create: jest.fn(),
+    delete: jest.fn()
+  }
+}));
+
+jest.mock('../src/modules/ai/ai.service', () => ({
+  aiService: {
+    itinerary: jest.fn(),
+    packing: jest.fn(),
+    budget: jest.fn()
+  }
+}));
+
+jest.mock('../src/config/prisma', () => ({
+  prisma: {
+    $queryRaw: jest.fn().mockResolvedValue([{ '?column?': 1 }])
+  }
+}));
+
 const mockedAuthService = authService as jest.Mocked<typeof authService>;
 const mockedCitiesService = citiesService as jest.Mocked<typeof citiesService>;
 const mockedActivitiesService = activitiesService as jest.Mocked<typeof activitiesService>;
+const mockedAiService = aiService as jest.Mocked<typeof aiService>;
 const mockedTripsService = tripsService as jest.Mocked<typeof tripsService>;
 const mockedStopsService = stopsService as jest.Mocked<typeof stopsService>;
 const mockedPublicService = publicService as jest.Mocked<typeof publicService>;
+const mockedNotesService = notesService as jest.Mocked<typeof notesService>;
+const mockedPackingService = packingService as jest.Mocked<typeof packingService>;
+const mockedMediaService = mediaService as jest.Mocked<typeof mediaService>;
 
 const authCookie = (): string => {
   const token = jwt.sign(
@@ -303,5 +383,96 @@ describe('implemented API route contracts', () => {
     mockedPublicService.getTripBySlug.mockResolvedValueOnce({ ...trip, isPublic: true });
 
     await request(app).get('/api/v1/public/trips/rajasthan-loop').expect(200);
+  });
+
+  it('covers notes, packing, media, AI, and docs endpoints', async () => {
+    mockedNotesService.list.mockResolvedValueOnce([note]);
+    mockedNotesService.create.mockResolvedValueOnce(note);
+    mockedNotesService.update.mockResolvedValueOnce({ ...note, isImportant: true });
+    mockedNotesService.delete.mockResolvedValueOnce();
+    mockedPackingService.list.mockResolvedValueOnce([packingItem]);
+    mockedPackingService.create.mockResolvedValueOnce(packingItem);
+    mockedPackingService.update.mockResolvedValueOnce({ ...packingItem, isPacked: true });
+    mockedPackingService.delete.mockResolvedValueOnce();
+    mockedMediaService.signUpload.mockReturnValueOnce({
+      signature: 'signed',
+      timestamp: 123,
+      cloudName: 'demo',
+      apiKey: 'key',
+      folder: 'traveloop',
+      resourceType: 'auto'
+    });
+    mockedMediaService.list.mockResolvedValueOnce([mediaUpload]);
+    mockedMediaService.create.mockResolvedValueOnce(mediaUpload);
+    mockedMediaService.delete.mockResolvedValueOnce();
+    mockedAiService.itinerary.mockResolvedValueOnce({ stops: [] });
+    mockedAiService.packing.mockResolvedValueOnce([{ category: 'electronics', items: ['Power bank'] }]);
+    mockedAiService.budget.mockResolvedValueOnce({
+      cityId: city.id,
+      cityName: city.name,
+      perDayUsd: 100,
+      accommodationUsd: 50,
+      foodUsd: 25,
+      activitiesUsd: 25
+    });
+
+    await request(app).get(`/api/v1/trips/${trip.id}/notes`).set('Cookie', [authCookie()]).expect(200);
+    await request(app)
+      .post(`/api/v1/trips/${trip.id}/notes`)
+      .set('Cookie', [authCookie()])
+      .send({ title: note.title, content: note.content, noteType: note.noteType })
+      .expect(201);
+    await request(app)
+      .put(`/api/v1/trips/${trip.id}/notes/${note.id}`)
+      .set('Cookie', [authCookie()])
+      .send({ isImportant: true })
+      .expect(200);
+    await request(app).delete(`/api/v1/trips/${trip.id}/notes/${note.id}`).set('Cookie', [authCookie()]).expect(204);
+    await request(app).get(`/api/v1/trips/${trip.id}/packing-items`).set('Cookie', [authCookie()]).expect(200);
+    await request(app)
+      .post(`/api/v1/trips/${trip.id}/packing-items`)
+      .set('Cookie', [authCookie()])
+      .send({ name: packingItem.name, category: packingItem.category })
+      .expect(201);
+    await request(app)
+      .put(`/api/v1/trips/${trip.id}/packing-items/${packingItem.id}`)
+      .set('Cookie', [authCookie()])
+      .send({ isPacked: true })
+      .expect(200);
+    await request(app)
+      .delete(`/api/v1/trips/${trip.id}/packing-items/${packingItem.id}`)
+      .set('Cookie', [authCookie()])
+      .expect(204);
+    await request(app).post('/api/v1/media/sign').set('Cookie', [authCookie()]).send({}).expect(200);
+    await request(app).get(`/api/v1/trips/${trip.id}/media`).set('Cookie', [authCookie()]).expect(200);
+    await request(app)
+      .post(`/api/v1/trips/${trip.id}/media`)
+      .set('Cookie', [authCookie()])
+      .send({
+        mediaType: mediaUpload.mediaType,
+        cloudinaryUrl: mediaUpload.cloudinaryUrl,
+        cloudinaryId: mediaUpload.cloudinaryId
+      })
+      .expect(201);
+    await request(app)
+      .delete(`/api/v1/trips/${trip.id}/media/${mediaUpload.id}`)
+      .set('Cookie', [authCookie()])
+      .expect(204);
+    await request(app)
+      .post('/api/v1/ai/itinerary')
+      .set('Cookie', [authCookie()])
+      .send({ prompt: 'Rajasthan', days: 3, vibe: 'comfort', tripType: 'solo' })
+      .expect(200);
+    await request(app)
+      .post('/api/v1/ai/packing')
+      .set('Cookie', [authCookie()])
+      .send({ destination: 'Jaipur', days: 3, tripType: 'solo' })
+      .expect(200);
+    await request(app)
+      .post('/api/v1/ai/budget-estimate')
+      .set('Cookie', [authCookie()])
+      .send({ cityId: city.id, cityName: city.name, vibe: 'comfort' })
+      .expect(200);
+    await request(app).get('/api/v1/docs/openapi.json').expect(200);
   });
 });
