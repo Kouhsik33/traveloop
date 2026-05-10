@@ -1,0 +1,39 @@
+# dependencies
+node_modules/
+
+# env files
+.env
+.env.local
+.env.production
+
+# build files
+dist/
+build/
+
+# logs
+logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# vscode
+.vscode/
+
+# docker
+*.tar
+
+# coverage
+coverage/
+
+# prisma generated
+prisma/generated/
+
+# frontend
+frontend/node_modules/
+frontend/dist/
+
+# backend
+backend/node_modules/
+backend/dist/
