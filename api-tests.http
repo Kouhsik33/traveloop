@@ -1,0 +1,179 @@
+@baseUrl = http://localhost:3000
+@frontendOrigin = http://localhost:5173
+@email = tester+{{$timestamp}}@traveloop.test
+@password = Password123
+@cityId = 11111111-1111-4111-8111-111111111111
+
+### Health
+GET {{baseUrl}}/health
+
+### Register
+# @name register
+POST {{baseUrl}}/api/v1/auth/register
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "name": "Test Traveler",
+  "travelerProfile": "solo"
+}
+
+### Login
+# @name login
+POST {{baseUrl}}/api/v1/auth/login
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Me
+GET {{baseUrl}}/api/v1/auth/me
+
+### Forgot Password
+POST {{baseUrl}}/api/v1/auth/forgot-password
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}
+
+### Reset Password
+POST {{baseUrl}}/api/v1/auth/reset-password
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "otp": "123456",
+  "newPassword": "NewPassword123"
+}
+
+### Cities List
+GET {{baseUrl}}/api/v1/cities?q=delhi&page=1&limit=20
+
+### City Detail
+GET {{baseUrl}}/api/v1/cities/{{cityId}}
+
+### Activities List
+# @name activitiesList
+GET {{baseUrl}}/api/v1/activities?cityId={{cityId}}&page=1&limit=20
+
+### Activity Detail
+GET {{baseUrl}}/api/v1/activities/{{activitiesList.response.body.$.data[0].id}}
+
+### Create Trip
+# @name createTrip
+POST {{baseUrl}}/api/v1/trips
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "title": "Manual API Test Trip",
+  "startDate": "2026-06-01",
+  "endDate": "2026-06-05",
+  "tripType": "solo",
+  "budgetCapUsd": 500,
+  "vibe": "comfort"
+}
+
+### Trips List
+GET {{baseUrl}}/api/v1/trips?page=1&limit=20
+
+### Trip Detail
+GET {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}
+
+### Update Trip
+PUT {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "title": "Updated Manual API Test Trip"
+}
+
+### Add Stop
+# @name createStop
+POST {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/stops
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "cityId": "{{cityId}}",
+  "orderIndex": 0,
+  "arrivalDate": "2026-06-01",
+  "departureDate": "2026-06-03"
+}
+
+### Stops List
+GET {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/stops
+
+### Update Stop
+PUT {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/stops/{{createStop.response.body.$.data.id}}
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "notes": "Updated from API test file"
+}
+
+### Reorder Stops
+PUT {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/stops/reorder
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "stopOrders": [
+    {
+      "id": "{{createStop.response.body.$.data.id}}",
+      "orderIndex": 0
+    }
+  ]
+}
+
+### Assign Activity To Stop
+# @name assignActivity
+POST {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/stops/{{createStop.response.body.$.data.id}}/activities
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "activityId": "{{activitiesList.response.body.$.data[0].id}}"
+}
+
+### Trip Budget
+GET {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/budget
+
+### Publish Trip
+# @name publishTrip
+PUT {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/publish
+Origin: {{frontendOrigin}}
+Content-Type: application/json
+
+{
+  "isPublic": true
+}
+
+### Public Trip
+GET {{baseUrl}}/api/v1/public/trips/{{publishTrip.response.body.$.data.publicSlug}}
+
+### Remove Activity From Stop
+DELETE {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/stops/{{createStop.response.body.$.data.id}}/activities/{{assignActivity.response.body.$.data.id}}
+Origin: {{frontendOrigin}}
+
+### Delete Stop
+DELETE {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/stops/{{createStop.response.body.$.data.id}}
+Origin: {{frontendOrigin}}
+
+### Delete Trip
+DELETE {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}
+Origin: {{frontendOrigin}}
+
+### Logout
+POST {{baseUrl}}/api/v1/auth/logout
+Origin: {{frontendOrigin}}
