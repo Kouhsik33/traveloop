@@ -14,6 +14,7 @@ export class AuthRepository {
     email: string;
     passwordHash: string;
     name: string;
+    avatarUrl: string;
     travelerProfile: string;
   }): Promise<User> {
     return prisma.user.create({

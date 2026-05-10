@@ -264,9 +264,12 @@ Register body:
   "email": "user@example.com",
   "password": "Password123",
   "name": "Test User",
+  "avatarUrl": "https://example.com/avatar.jpg",
   "travelerProfile": "solo"
 }
 ```
+
+Registration is intentionally strict: `name` must contain at least 2 characters, `avatarUrl` is required and must be a valid URL, and `password` must be 8-128 characters with at least one uppercase letter, one lowercase letter, and one number. Login accepts a valid email and an 8-128 character password.
 
 Login body:
 
@@ -487,6 +490,40 @@ Create media record body:
 }
 ```
 
+### Maps
+
+The architecture uses Leaflet with OpenStreetMap instead of Google Maps so the MVP has no map billing dependency or API key requirement.
+
+| Method | Path | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/maps/trips/:id/route` | Yes | Return Leaflet/OpenStreetMap markers and GeoJSON route data for owned trip stops |
+
+Route response shape:
+
+```json
+{
+  "data": {
+    "tripId": "uuid",
+    "provider": "openstreetmap",
+    "tileLayerUrl": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    "markers": [
+      {
+        "stopId": "uuid",
+        "cityId": "uuid",
+        "label": "Jaipur, India",
+        "orderIndex": 0,
+        "coordinates": { "latitude": 26.9124, "longitude": 75.7873 }
+      }
+    ],
+    "routeGeoJson": {
+      "type": "Feature",
+      "geometry": { "type": "LineString", "coordinates": [[75.7873, 26.9124]] }
+    }
+  },
+  "meta": null
+}
+```
+
 ### AI
 
 | Method | Path | Auth | Description |
@@ -553,6 +590,7 @@ Implemented:
 - Packing items
 - Media signing and media records
 - AI itinerary, packing, and budget estimate endpoints with fallback
+- Leaflet/OpenStreetMap route data endpoint for trip maps
 - Email, SMS, and WhatsApp notification service
 - Lightweight API docs at `/api/v1/docs`
 - Health response with DB status and uptime
@@ -562,11 +600,13 @@ Implemented:
 
 Pending from the implementation playbook:
 
+- Frontend screens for dashboard, itinerary builder/view, budget charts, settings, and admin analytics
 - Full Swagger UI package integration, if the team requires interactive Swagger rather than lightweight docs/OpenAPI JSON
 - Full real-database integration tests for every `400/401/403/404` path
 - City full-text `search_vector` generated column and GIN index refinements
 - Stop date conflict validation across neighboring stops
 - Public slug collision retry loop
+- Phase 2+ items from the architecture doc such as collaboration, offline mode, coupons/rewards, AI chatbot, PDF receipts, and network/medical/food location data
 
 ## Production Notes
 

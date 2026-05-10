@@ -2,17 +2,24 @@ import { z } from 'zod';
 
 export const registerDto = z
   .object({
-    email: z.string().email().max(255),
-    password: z.string().min(8).max(128),
-    name: z.string().min(1).max(100),
+    email: z.string().trim().toLowerCase().email().max(255),
+    password: z
+      .string()
+      .min(8)
+      .max(128)
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/, {
+        message: 'Password must include uppercase, lowercase, and number'
+      }),
+    name: z.string().trim().min(2).max(100),
+    avatarUrl: z.string().url().max(2000),
     travelerProfile: z.enum(['solo', 'couple', 'family', 'senior', 'group']).default('solo')
   })
   .strict();
 
 export const loginDto = z
   .object({
-    email: z.string().email().max(255),
-    password: z.string().min(1).max(128)
+    email: z.string().trim().toLowerCase().email().max(255),
+    password: z.string().min(8).max(128)
   })
   .strict();
 

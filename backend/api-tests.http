@@ -18,6 +18,7 @@ Content-Type: application/json
   "email": "{{email}}",
   "password": "{{password}}",
   "name": "Test Traveler",
+  "avatarUrl": "https://res.cloudinary.com/demo/image/upload/sample.jpg",
   "travelerProfile": "solo"
 }
 
@@ -113,6 +114,9 @@ Content-Type: application/json
 
 ### Stops List
 GET {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/stops
+
+### Trip Map Route
+GET {{baseUrl}}/api/v1/maps/trips/{{createTrip.response.body.$.data.id}}/route
 
 ### Update Stop
 PUT {{baseUrl}}/api/v1/trips/{{createTrip.response.body.$.data.id}}/stops/{{createStop.response.body.$.data.id}}

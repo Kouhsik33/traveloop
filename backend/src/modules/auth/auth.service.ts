@@ -37,6 +37,7 @@ export class AuthService {
       email: dto.email.toLowerCase(),
       passwordHash,
       name: dto.name,
+      avatarUrl: dto.avatarUrl,
       travelerProfile: dto.travelerProfile
     });
 

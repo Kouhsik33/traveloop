@@ -6,6 +6,7 @@ import { activitiesService } from '../src/modules/activities/activities.service'
 import { aiService } from '../src/modules/ai/ai.service';
 import { authService } from '../src/modules/auth/auth.service';
 import { citiesService } from '../src/modules/cities/cities.service';
+import { mapsService } from '../src/modules/maps/maps.service';
 import { mediaService } from '../src/modules/media/media.service';
 import { notificationsService } from '../src/modules/notifications/notifications.service';
 import { notesService } from '../src/modules/notes/notes.service';
@@ -202,6 +203,12 @@ jest.mock('../src/modules/media/media.service', () => ({
   }
 }));
 
+jest.mock('../src/modules/maps/maps.service', () => ({
+  mapsService: {
+    tripRoute: jest.fn()
+  }
+}));
+
 jest.mock('../src/modules/ai/ai.service', () => ({
   aiService: {
     itinerary: jest.fn(),
@@ -235,6 +242,7 @@ const mockedPublicService = publicService as jest.Mocked<typeof publicService>;
 const mockedNotesService = notesService as jest.Mocked<typeof notesService>;
 const mockedPackingService = packingService as jest.Mocked<typeof packingService>;
 const mockedMediaService = mediaService as jest.Mocked<typeof mediaService>;
+const mockedMapsService = mapsService as jest.Mocked<typeof mapsService>;
 const mockedNotificationsService = notificationsService as jest.Mocked<typeof notificationsService>;
 
 const authCookie = (): string => {
@@ -277,7 +285,13 @@ describe('implemented API route contracts', () => {
 
     await request(app)
       .post('/api/v1/auth/register')
-      .send({ email: user.email, password: 'password123', name: user.name, travelerProfile: 'solo' })
+      .send({
+        email: user.email,
+        password: 'Password123',
+        name: user.name,
+        avatarUrl: 'https://example.com/avatar.jpg',
+        travelerProfile: 'solo'
+      })
       .expect(201);
     await request(app)
       .post('/api/v1/auth/login')
@@ -439,6 +453,29 @@ describe('implemented API route contracts', () => {
       foodUsd: 25,
       activitiesUsd: 25
     });
+    mockedMapsService.tripRoute.mockResolvedValueOnce({
+      tripId: trip.id,
+      provider: 'openstreetmap',
+      tileLayerUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      attribution: '&copy; OpenStreetMap contributors',
+      markers: [
+        {
+          stopId: stop.id,
+          cityId: city.id,
+          label: 'Jaipur, India',
+          orderIndex: 0,
+          arrivalDate: stop.arrivalDate,
+          departureDate: stop.departureDate,
+          coordinates: { latitude: city.latitude, longitude: city.longitude }
+        }
+      ],
+      routeGeoJson: {
+        type: 'Feature',
+        properties: { tripId: trip.id, stopCount: 1 },
+        geometry: { type: 'LineString', coordinates: [[city.longitude, city.latitude]] }
+      },
+      links: { openStreetMap: 'https://www.openstreetmap.org/' }
+    });
 
     await request(app).get(`/api/v1/trips/${trip.id}/notes`).set('Cookie', [authCookie()]).expect(200);
     await request(app)
@@ -496,6 +533,10 @@ describe('implemented API route contracts', () => {
       .post('/api/v1/ai/budget-estimate')
       .set('Cookie', [authCookie()])
       .send({ cityId: city.id, cityName: city.name, vibe: 'comfort' })
+      .expect(200);
+    await request(app)
+      .get(`/api/v1/maps/trips/${trip.id}/route`)
+      .set('Cookie', [authCookie()])
       .expect(200);
     await request(app).get('/api/v1/docs/openapi.json').expect(200);
   });
