@@ -1,50 +1,30 @@
-
-# dependencies
-node_modules/
-
-# env files
-.env
-.env.local
-.env.production
-
-# build files
-dist/
-build/
-
-# logs
-logs
-*.log
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# vscode
-.vscode/
-
-# docker
-*.tar
-
-# coverage
-coverage/
-
-# prisma generated
-prisma/generated/
-
-# frontend
-frontend/node_modules/
-frontend/dist/
-
-# backend
-backend/node_modules/
-backend/dist/
 node_modules/
 dist/
+
 .env
 .env.*
 !.env.example
+
 coverage/
+
 npm-debug.log*
 *.log
+
 .server-test.pid
-feat/backend-team
+
+.DS_Store
+Thumbs.db
+
+.vscode/
+
+frontend/node_modules/
+frontend/dist/
+
+backend/node_modules/
+backend/dist/
+
+prisma/generated/
+
+build/
+logs/
+*.tar
