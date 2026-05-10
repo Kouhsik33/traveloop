@@ -77,6 +77,36 @@ npm run build
 npm start
 ```
 
+The backend uses port `3000` by default:
+
+```env
+PORT="3000"
+```
+
+## Deployment Commands
+
+Build command:
+
+```bash
+npm run build
+```
+
+Start command:
+
+```bash
+npm start
+```
+
+Production setup before start:
+
+```bash
+npm install
+npm run prisma:generate
+npm run prisma:deploy
+npm run build
+npm start
+```
+
 ## Prisma
 
 Development migration:
@@ -97,7 +127,7 @@ Seed data:
 npm run prisma:seed
 ```
 
-Current seed data contains starter cities and activities for local testing. The playbook target is larger: 50+ cities and 200+ activities.
+Current seed data contains 50 cities and 200 activities.
 
 ## Testing
 
@@ -497,7 +527,6 @@ Pending from the implementation playbook:
 
 - Full Swagger UI package integration, if the team requires interactive Swagger rather than lightweight docs/OpenAPI JSON
 - Full real-database integration tests for every `400/401/403/404` path
-- Larger seed data target: 50+ cities and 200+ activities
 - City full-text `search_vector` generated column and GIN index refinements
 - Stop date conflict validation across neighboring stops
 - Public slug collision retry loop
