@@ -12,12 +12,7 @@ import "./index.css";
 const rootEl = document.getElementById("root");
 if (!rootEl) throw new Error("Root element #root not found");
 
-async function prepare() {
-  if (import.meta.env.DEV && import.meta.env.VITE_USE_MSW === "true") {
-    const { worker } = await import("./mocks/browser");
-    await worker.start({ onUnhandledRequest: "bypass" });
-  }
-}
+async function prepare() {}
 
 void prepare().then(() => {
   createRoot(rootEl).render(

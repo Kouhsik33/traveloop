@@ -1,3 +1,4 @@
+HEAD
 # ✈ Traveloop — Personalized Travel Planning Made Easy
 
 > Plan smarter. Travel better. Built for real travelers — with real data, real budgets, and zero fragmentation.
@@ -143,10 +144,19 @@ Three-tier architecture with strict separation of concerns.
 | 7 | Public share | `GET /api/v1/public/trips/:slug` → no auth → read-only trip JSON |
 | 8 | Budget calculation | SQL aggregation server-side → returned as summary object |
 
+=======
+# Traveloop — AI Powered Smart Travel Planning Platform
+
+Frontend Deployment: https://traveloop-plum.vercel.app/  
+Backend Deployment: https://traveloop-production.up.railway.app/  
+API Health Endpoint: https://traveloop-production.up.railway.app/health  
+
+>>>>>>> 710944a (connect real backend auth)
 ---
 
-## Tech Stack
+# Overview
 
+HEAD
 | Layer | Technology | Why |
 | --- | --- | --- |
 | Frontend | React 18 + Vite | Fast HMR, concurrent features, 5× faster builds than CRA |
@@ -236,10 +246,43 @@ traveloop/
     ├── docker-compose.yml
     ├── railway.toml
     └── .env.example
+=======
+Traveloop is a production-oriented full-stack AI-powered travel planning ecosystem designed to simplify and modernize the complete travel workflow — from destination discovery and itinerary generation to budgeting, collaborative planning, trip organization, and public itinerary sharing.
+
+The platform combines AI-assisted trip planning, scalable cloud deployment, modular backend engineering, secure authentication systems, and responsive modern UI/UX into a centralized intelligent travel ecosystem.
+
+Instead of relying on fragmented travel tools across multiple platforms, Traveloop provides a unified intelligent travel experience with extensible architecture and scalable infrastructure.
+
+---
+
+# Architecture
+
+```text
+Presentation Layer
+React + Vite + Tailwind CSS
+
+        ↓ HTTPS REST API
+
+Application Layer
+Node.js + Express.js
+
+        ↓ Prisma ORM
+
+Data Layer
+PostgreSQL Database
+
+External Services
+- Google Gemini AI
+- Cloudinary
+- OpenStreetMap
+- Resend
+- Twilio
+>>>>>>> 710944a (connect real backend auth)
 ```
 
 ---
 
+HEAD
 ## Backend — Setup & Running
 
 ### Prerequisites
@@ -264,11 +307,156 @@ cp .env.example .env
 ```
 
 For Neon, use SSL in the connection string:
+=======
+# Backend Infrastructure
+
+Traveloop Backend is built using:
+
+- Node.js
+- Express.js
+- TypeScript
+- Prisma ORM
+- PostgreSQL
+
+The backend exposes:
+
+```bash
+GET /health
+```
+
+and versioned API routes under:
+
+```bash
+/api/v1
+```
+
+---
+
+# Backend Stack
+
+- Runtime: Node.js 20+
+- API: Express + TypeScript
+- Database: PostgreSQL via Prisma
+- Authentication: JWT stored in HttpOnly cookies
+- Validation: Zod
+- Testing: Jest + Supertest
+- Logging: Winston + Morgan
+
+---
+
+# Tech Stack
+
+## Frontend
+- React 18
+- Vite
+- Tailwind CSS
+- Zustand
+- React Query
+- Axios
+- Leaflet.js
+
+## Backend
+- Node.js
+- Express.js
+- TypeScript
+- Prisma ORM
+- PostgreSQL
+- JWT Authentication
+- Zod Validation
+- Winston Logger
+- Morgan Logger
+- Jest + Supertest
+
+## Deployment & Infrastructure
+- Railway
+- Vercel
+- GitHub
+- Docker-ready Infrastructure
+
+## External Services
+- Google Gemini AI
+- Cloudinary
+- OpenStreetMap
+- Resend Email Service
+- Twilio Messaging APIs
+
+---
+
+# Core Features
+
+## Authentication & Security
+- Secure JWT authentication using HttpOnly cookies
+- Protected route middleware
+- Secure origin validation
+- Helmet security middleware
+- Express rate limiting
+- Zod schema validation
+
+## AI-Powered Planning
+- AI itinerary generation
+- AI packing recommendations
+- AI budget estimation
+- Personalized travel workflows
+- Gemini AI integration
+
+## Smart Trip Management
+- Trip creation and management
+- Dynamic itinerary builder
+- Destination exploration
+- Multi-stop trip organization
+- Public itinerary sharing
+- Notes and packing management
+- Budget tracking workflows
+
+## Maps & Location Services
+- OpenStreetMap integration
+- Leaflet interactive maps
+- GeoJSON route visualization
+- Destination markers and navigation support
+
+## Media & Cloud Integration
+- Cloudinary media uploads
+- Signed upload APIs
+- Railway backend infrastructure
+- Vercel CDN deployment
+
+---
+
+# Backend Modules
+
+Implemented backend modules include:
+
+- Authentication
+- Trips
+- Stops
+- Cities
+- Activities
+- Notes
+- Packing Items
+- Media
+- AI Services
+- Notifications
+- Public Trip Sharing
+- Maps & Route Services
+
+---
+
+# Environment Configuration
+
+Copy `.env.example` to `.env` and configure the required variables.
+
+```bash
+cp .env.example .env
+```
+
+For Neon PostgreSQL SSL configuration:
+>>>>>>> 710944a (connect real backend auth)
 
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@HOST/neondb?sslmode=require"
 ```
 
+HEAD
 ### Database Setup
 
 ```powershell
@@ -312,17 +500,240 @@ npm run prisma:generate
 npm run prisma:deploy
 npm run build
 npm start
+---
+
+# Required Environment Variables
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST/neondb?sslmode=require"
+
+JWT_SECRET="minimum-32-character-random-secret"
+
+JWT_EXPIRES_IN="7d"
+
+FRONTEND_URL="http://localhost:5173"
+
+NODE_ENV="development"
+
+PORT="3000"
+
+LOG_LEVEL="debug"
+>>>>>>> 710944a (connect real backend auth)
 ```
 
 ---
 
+HEAD
 ## Frontend — Setup & Running
 
 ### Install
+=======
+# Optional Environment Variables
+
+```env
+GEMINI_API_KEY="..."
+
+CLOUDINARY_CLOUD_NAME="..."
+
+CLOUDINARY_API_KEY="..."
+
+CLOUDINARY_API_SECRET="..."
+
+RESEND_API_KEY="..."
+
+TWILIO_ACCOUNT_SID="..."
+
+TWILIO_AUTH_TOKEN="..."
+
+TWILIO_PHONE_NUMBER="..."
+```
+
+---
+
+# Frontend Environment Variables
+
+```env
+VITE_API_URL=https://traveloop-production.up.railway.app/api/v1
+```
+
+Optional:
+
+```env
+```
+
+---
+
+# API Infrastructure
+
+The backend exposes structured REST APIs for:
+
+- Authentication
+- Trips
+- Stops
+- Activities
+- Cities
+- Media
+- Packing
+- Notes
+- Maps
+- AI Services
+- Notifications
+
+API response contracts follow standardized formats for:
+- Resource responses
+- Paginated data
+- Error handling
+- Metadata management
+
+---
+
+# Authentication System
+
+Traveloop uses secure JWT authentication stored inside HttpOnly cookies.
+
+Features include:
+- Secure cookie-based authentication
+- Protected route middleware
+- Ownership-based resource access
+- Secure production cookie strategy
+- Origin validation for state-changing requests
+
+---
+
+# AI Integration
+
+Traveloop integrates Google Gemini AI for:
+- Dynamic itinerary generation
+- Packing list generation
+- Budget estimation workflows
+- Personalized destination planning
+
+Fallback workflows are implemented to ensure platform stability even when external AI services are unavailable.
+
+---
+
+# Database & ORM
+
+Traveloop uses PostgreSQL with Prisma ORM.
+
+Key implementation features:
+- Prisma schema migrations
+- Seeded city and activity datasets
+- Relationship modeling
+- Typed database access
+- Scalable query workflows
+
+---
+
+# Notification Services
+
+Integrated notification systems include:
+- Email notifications via Resend
+- SMS notifications
+- WhatsApp notifications
+- OTP-based password reset workflows
+
+---
+
+# Testing & Validation
+
+## Backend Testing
+- Jest unit testing
+- Supertest API testing
+- Manual API contract testing
+- Zod schema validation
+
+## Security Standards
+- Helmet middleware
+- Secure cookies
+- Strict CORS policies
+- Password hashing
+- Request rate limiting
+
+---
+
+# Monorepo Structure
+
+```text
+traveloop/
+│
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   └── vite.config.js
+│
+├── backend/
+│   ├── prisma/
+│   ├── src/modules/
+│   ├── middleware/
+│   ├── utils/
+│   └── shared/
+│
+├── devops/
+│   ├── docker-compose.yml
+│   └── deployment configurations
+│
+└── README.md
+```
+
+---
+
+# Deployment Workflow
+
+## Frontend Deployment
+- Platform: Vercel
+- Build System: Vite
+- CDN-based static hosting
+
+## Backend Deployment
+- Platform: Railway
+- Express production server
+- PostgreSQL integration
+
+---
+
+# Current Implementation Status
+
+## Implemented
+- Authentication system
+- Trips management
+- Stops management
+- Cities APIs
+- Activities APIs
+- Public itinerary sharing
+- Budget aggregation
+- Notes system
+- Packing management
+- Media upload infrastructure
+- AI itinerary generation
+- AI budget estimation
+- AI packing workflows
+- OpenStreetMap route services
+- Email/SMS/WhatsApp notifications
+- Production deployment infrastructure
+- Cookie authentication
+- API contract testing
+
+## Planned Extensions
+- Advanced analytics dashboard
+- Offline support
+- Real-time collaboration
+- AI chatbot workflows
+- PDF itinerary exports
+- Rewards & coupons system
+- Extended admin analytics
+
+---
+
+# Installation
+
+## Frontend
+>>>>>>> 710944a (connect real backend auth)
 
 ```bash
 cd frontend
 npm install
+HEAD
 ```
 
 ### Configure
@@ -344,10 +755,22 @@ npm run dev
 
 ```bash
 npm run build
+=======
+npm run dev
+```
+
+## Backend
+
+```bash
+cd backend
+npm install
+npm run dev
+>>>>>>> 710944a (connect real backend auth)
 ```
 
 ---
 
+HEAD
 ## Environment Variables
 
 ### Backend (Required)
@@ -376,7 +799,6 @@ npm run build
 | `TWILIO_AUTH_TOKEN` | Optional. |
 | `TWILIO_SMS_FROM` | Optional. |
 | `TWILIO_WHATSAPP_FROM` | Optional. |
-
 ### Frontend (Required)
 
 | Variable | Description |
@@ -1010,3 +1432,19 @@ Three workflow files in `.github/workflows/`:
 ---
 
 *Traveloop — Built for real travelers. Backed by real data. Deployed like a real product.*
+=======
+# Production Notes
+
+- Railway hosts backend infrastructure and PostgreSQL integration
+- Vercel serves frontend assets through CDN deployment
+- Prisma manages schema migrations and ORM workflows
+- Gemini AI powers intelligent travel planning
+- Cloudinary handles scalable media storage
+- OpenStreetMap removes dependency on paid map providers
+
+---
+
+# License
+
+Developed as part of an AI-powered intelligent travel planning platform initiative focused on scalable cloud-native software engineering and modern full-stack architecture.
+>>>>>>> 710944a (connect real backend auth)
