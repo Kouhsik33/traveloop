@@ -27,25 +27,19 @@ const TripDetailPage       = lazy(() => import("@/pages/Trips/TripDetail"));
 const PublicItineraryPage  = lazy(() => import("@/pages/Public/PublicItinerary"));
 const ForgotPasswordPage   = lazy(() => import("@/pages/Auth/ForgotPassword"));
 const CitiesPage           = lazy(() => import("@/pages/Search/Cities"));
+const CityDetailPage       = lazy(() => import("@/pages/Search/CityDetail"));
 const DocsPage             = lazy(() => import("@/pages/Trips/Docs"));
 const TripMediaPage        = lazy(() => import("@/pages/Media/TripMedia"));
 
 /* ── Suspense fallback ───────────────────────────────────── */
 function PageLoader() {
   return (
-    <div style={{
-      minHeight: "60vh",
-      display: "grid",
-      placeItems: "center",
-      background: "var(--cl-bg)",
-    }}>
-      <div style={{
-        width: "2.5rem", height: "2.5rem",
-        border: "3px solid var(--cl-border)",
-        borderTopColor: "var(--cl-accent)",
-        borderRadius: "50%",
-        animation: "spin 0.8s linear infinite",
-      }} />
+    <div className="page-loader">
+      <div className="page-loader-card">
+        <div className="page-loader-line short" />
+        <div className="page-loader-line" />
+        <div className="page-loader-line medium" />
+      </div>
     </div>
   );
 }
@@ -87,6 +81,7 @@ export default function App() {
               <Route path={ROUTES.community}                    element={<AnimatedPage><CommunityTabPage /></AnimatedPage>} />
               <Route path={ROUTES.admin}                        element={<AnimatedPage><AdminPanelPage /></AnimatedPage>} />
               <Route path={ROUTES.cities}                       element={<AnimatedPage><CitiesPage /></AnimatedPage>} />
+              <Route path="/cities/:id"                         element={<AnimatedPage><CityDetailPage /></AnimatedPage>} />
               <Route path="/trips/:id/docs"                     element={<AnimatedPage><DocsPage /></AnimatedPage>} />
               <Route path="/trips/:id/media"                    element={<AnimatedPage><TripMediaPage /></AnimatedPage>} />
             </Route>

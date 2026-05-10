@@ -6,6 +6,8 @@ import { getUserAvatarUrl } from "@/lib/avatar";
 import { useAuthStore } from "@/store/authStore";
 import { useTheme } from "./ThemeProvider";
 import { logout } from "@/api/auth.api";
+import { startGuidedTour } from "./GuidedTour";
+import { Avatar } from "@/components/shared/Avatar";
 import "@/styles/components/navbar.css";
 
 const navLinks = [
@@ -24,6 +26,7 @@ export function Navbar() {
 
   const [menuOpen, setMenuOpen]     = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const dropdownRef = useRef(null);
 
   /* Close dropdown on outside click */
@@ -44,6 +47,14 @@ export function Navbar() {
   };
 
   const avatarUrl = user ? getUserAvatarUrl(user) : "";
+  const initials = user?.name
+    ? user.name
+        .split(" ")
+        .map((part) => part?.[0] || "")
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "?";
 
   return (
     <header className="navbar">
@@ -84,6 +95,17 @@ export function Navbar() {
         {user && (
           <button
             className="theme-toggle"
+            title="Start website tour"
+            aria-label="Start website tour"
+            onClick={startGuidedTour}
+          >
+            ?
+          </button>
+        )}
+
+        {user && (
+          <button
+            className="theme-toggle"
             title="Notifications"
             aria-label="View notifications"
           >
@@ -100,13 +122,11 @@ export function Navbar() {
                 aria-expanded={menuOpen}
                 aria-haspopup="true"
               >
-                <div className="avatar avatar-sm">
-                  <img
-                    src={avatarUrl}
-                    alt={user.name}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                </div>
+                <Avatar 
+                  name={user.name} 
+                  url={avatarUrl} 
+                  size="sm" 
+                />
                 <span style={{ fontSize: "var(--fs-sm)", color: "rgba(244,241,222,0.7)" }}>
                   {user.name?.split(" ")[0]}
                 </span>

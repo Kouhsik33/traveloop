@@ -3,14 +3,73 @@ import { useEffect, useState } from "react";
 const STORAGE_KEY = "traveloop.local.v1";
 
 export const defaultLocalState = {
-    user: null,
-    trips: [],
-    itinerarySections: [],
-    packingGroups: [],
-    notes: [],
-    invoiceRows: [],
+    user: {
+        firstName: "Demo",
+        lastName: "Traveler",
+        email: "demo@traveloop.local",
+        phone: "",
+        city: "Delhi",
+        country: "India",
+        additionalInfo: "Local profile until backend integration."
+    },
+    trips: [
+        {
+            id: "demo",
+            title: "Paris & Rome Adventure",
+            place: "Paris, Rome",
+            status: "ongoing",
+            startDate: "2026-06-01",
+            endDate: "2026-06-08",
+            budget: 20000,
+            overview: "Short Over View of the Trip"
+        }
+    ],
+    itinerarySections: [
+        { id: "sec-1", title: "Museum visit", dateRange: "Day 1", budget: 3000, info: "Travel section, hotel or activity." },
+        { id: "sec-2", title: "Food walk", dateRange: "Day 1", budget: 2000, info: "Travel section, hotel or activity." },
+        { id: "sec-3", title: "Market tour", dateRange: "Day 2", budget: 1500, info: "Travel section, hotel or activity." }
+    ],
+    packingGroups: [
+        {
+            id: "documents",
+            title: "Documents",
+            items: [
+                { id: "passport", name: "Passport", packed: true },
+                { id: "tickets", name: "Flight Tickets (printed)", packed: true },
+                { id: "insurance", name: "Travel insurance", packed: true },
+                { id: "hotel-confirmation", name: "Hotel booking confirmation", packed: false }
+            ]
+        },
+        {
+            id: "clothing",
+            title: "Clothing",
+            items: [
+                { id: "shirts", name: "Casual shirts", packed: true },
+                { id: "trousers", name: "Trousers / jeans", packed: false },
+                { id: "shoes", name: "Comfortable walking shoes", packed: false },
+                { id: "jacket", name: "Light jacket / windbreaker", packed: false }
+            ]
+        },
+        {
+            id: "electronics",
+            title: "Electronics",
+            items: [
+                { id: "phone-charger", name: "Phone charger", packed: true },
+                { id: "adapter", name: "Universal power adapter", packed: false },
+                { id: "headphones", name: "Earphone / headphones", packed: false }
+            ]
+        }
+    ],
+    notes: [
+        { id: "note-1", title: "Rome stop", body: "Hotel included (4:00pm)\nDay 3: June 14 2025" },
+        { id: "note-2", title: "Hotel check-in details - Rome stop", body: "check in after 2pm, room 302, breakfast included (7-10am)\nDay 3: June 14 2025" }
+    ],
+    invoiceRows: [
+        { id: "row-1", category: "hotel", description: "hotel booking paris", qty: "3 nights", unitCost: 3000 },
+        { id: "row-2", category: "travel", description: "Flight booking (DEL -> PAR)", qty: "1", unitCost: 12000 }
+    ],
     communityPosts: [],
-    searchOptions: []
+    searchOptions: ["Goa beach stay", "Rome hotel", "Paris museum", "Local market walk", "Budget food tour"]
 };
 
 function readState() {

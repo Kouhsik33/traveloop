@@ -1,13 +1,11 @@
-import { apiClient, unwrap } from "./client";
+import { buildBudgetPrompt, buildItineraryPrompt, buildPackingPrompt, callGeminiText } from "@/lib/gemini";
+
 export async function generateItinerary(body) {
-    const res = await apiClient.post(`/ai/itinerary`, body);
-    return unwrap(res);
+    return callGeminiText(buildItineraryPrompt(body));
 }
 export async function generatePackingList(body) {
-    const res = await apiClient.post(`/ai/packing`, body);
-    return unwrap(res);
+    return callGeminiText(buildPackingPrompt(body));
 }
 export async function estimateBudget(body) {
-    const res = await apiClient.post(`/ai/budget-estimate`, body);
-    return unwrap(res);
+    return callGeminiText(buildBudgetPrompt(body));
 }

@@ -48,6 +48,11 @@
   box-shadow: var(--shadow-accent);
   overflow: hidden;
 }
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .profile-avatar-edit {
   position: absolute;
   bottom: 0;
@@ -136,6 +141,44 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--sp-md);
+}
+
+.profile-help {
+  color: var(--cl-text-muted);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-body);
+}
+
+.style-chip-grid {
+  display: flex;
+  gap: var(--sp-xs);
+  flex-wrap: wrap;
+  margin: var(--sp-md) 0;
+}
+
+.style-chip {
+  border: 1px solid var(--cl-border);
+  border-radius: var(--br-full);
+  background: var(--cl-bg-alt);
+  color: var(--cl-text);
+  padding: 0.55rem 0.85rem;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.style-chip.active {
+  border-color: var(--cl-accent);
+  background: rgba(224, 122, 95, 0.12);
+  color: var(--cl-accent);
+}
+
+.profile-key-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--sp-sm);
+  align-items: center;
+  margin-bottom: var(--sp-md);
 }
 
 .profile-form-divider {

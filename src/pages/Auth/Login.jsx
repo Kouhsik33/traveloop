@@ -6,7 +6,7 @@ import { useAuthStore } from "@/store/authStore";
 import { login } from "@/api/auth.api";
 import "@/styles/components/auth.css";
 import "@/styles/components/ui.css";
-import { Map, Banknote, Luggage, Globe, Plane, AlertTriangle } from "lucide-react";
+import { Map, Banknote, Luggage, Globe, Plane, AlertTriangle, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const navigate  = useNavigate();
@@ -14,6 +14,7 @@ export default function LoginPage() {
   const setUser   = useAuthStore((s) => s.setUser);
   const [error, setError]     = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: { email: "", password: "" },
@@ -130,13 +131,18 @@ export default function LoginPage() {
                   Forgot password?
                 </Link>
               </div>
-              <input
-                id="login-password"
-                type="password"
-                className={`input${errors.password ? " input-error" : ""}`}
-                placeholder="Your password"
-                {...register("password", { required: "Password is required" })}
-              />
+              <div className="password-input-wrap">
+                <input
+                  id="login-password"
+                  type={showPassword ? "text" : "password"}
+                  className={`input password-input${errors.password ? " input-error" : ""}`}
+                  placeholder="Your password"
+                  {...register("password", { required: "Password is required" })}
+                />
+                <button type="button" className="password-toggle" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Hide password" : "Show password"}>
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {errors.password && <span className="input-error-msg">{errors.password.message}</span>}
             </div>
 

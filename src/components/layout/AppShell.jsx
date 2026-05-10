@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { Navbar } from "./Navbar";
+import { GuidedTour } from "./GuidedTour";
 
 /** Wraps all authenticated pages: Navbar + page outlet */
 export function AppShell() {
@@ -9,6 +10,7 @@ export function AppShell() {
       <main style={{ flex: 1 }}>
         <Outlet />
       </main>
+      <GuidedTour />
     </div>
   );
 }

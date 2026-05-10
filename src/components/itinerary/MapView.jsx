@@ -29,7 +29,7 @@ export function MapView({ stops = [], routeData, height = "400px" }) {
     if (!containerRef.current || mapRef.current) return;
     mapRef.current = L.map(containerRef.current).setView([20, 78], 4);
     L.tileLayer(routeData?.tileLayerUrl || "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "OpenStreetMap contributors",
+      attribution: routeData?.attribution || "&copy; OpenStreetMap contributors",
     }).addTo(mapRef.current);
     routeLayerRef.current = L.layerGroup().addTo(mapRef.current);
 
@@ -38,7 +38,7 @@ export function MapView({ stops = [], routeData, height = "400px" }) {
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [routeData?.tileLayerUrl]);
+  }, [routeData?.attribution, routeData?.tileLayerUrl]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -46,18 +46,23 @@ export function MapView({ stops = [], routeData, height = "400px" }) {
     if (!map || !layer) return;
     layer.clearLayers();
 
-    const coords = markers
-      .map((m) => [Number(m.coordinates?.latitude), Number(m.coordinates?.longitude)])
-      .filter(([lat, lng]) => Number.isFinite(lat) && Number.isFinite(lng));
+    const markerPoints = markers
+      .map((marker) => ({
+        marker,
+        coord: [Number(marker.coordinates?.latitude), Number(marker.coordinates?.longitude)],
+      }))
+      .filter(({ coord: [lat, lng] }) => Number.isFinite(lat) && Number.isFinite(lng));
+    const coords = markerPoints.map(({ coord }) => coord);
 
     if (routeData?.routeGeoJson) {
-      L.geoJSON(routeData.routeGeoJson, { style: { color: "#0D7680", weight: 3, dashArray: "6 4" } }).addTo(layer);
+      L.geoJSON(routeData.routeGeoJson, {
+        style: { color: "#0D7680", weight: 3, dashArray: "6 4", className: "traveloop-route-line" },
+      }).addTo(layer);
     } else if (coords.length > 1) {
-      L.polyline(coords, { color: "#0D7680", weight: 3, dashArray: "6 4" }).addTo(layer);
+      L.polyline(coords, { color: "#0D7680", weight: 3, dashArray: "6 4", className: "traveloop-route-line" }).addTo(layer);
     }
 
-    coords.forEach((coord, index) => {
-      const marker = markers[index];
+    markerPoints.forEach(({ marker, coord }, index) => {
       L.marker(coord).bindPopup(`<b>${marker?.label || `Stop ${index + 1}`}</b>`).addTo(layer);
     });
 

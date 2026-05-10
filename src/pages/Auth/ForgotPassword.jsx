@@ -6,12 +6,14 @@ import { forgotPassword, resetPassword } from "@/api/auth.api";
 import { getApiErrorMessage } from "@/api/client";
 import "@/styles/components/auth.css";
 import "@/styles/components/ui.css";
-import { AlertTriangle, CheckCircle, Key, Mail, Shield } from "lucide-react";
+import { AlertTriangle, CheckCircle, Eye, EyeOff, Key, Mail, Shield } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const {
     register: registerRequest,
     handleSubmit: handleRequestSubmit,
@@ -31,7 +33,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     try {
       await forgotPassword(email);
-      setSuccess("Password reset OTP sent. Enter it below with your new password.");
+      setSuccess(`A 6-digit OTP has been sent to ${email}. Check your inbox (and spam folder). Enter it below with your new password.`);
     } catch (err) {
       setError(getApiErrorMessage(err));
     } finally {
@@ -50,7 +52,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     try {
       await resetPassword({ email, otp: values.otp, newPassword: values.newPassword });
-      setSuccess("Password reset complete. You can sign in with your new password.");
+      setSuccess("Password reset complete! A confirmation email has been sent. You can now sign in with your new password.");
     } catch (err) {
       setError(getApiErrorMessage(err));
     } finally {
@@ -106,12 +108,22 @@ export default function ForgotPasswordPage() {
             </div>
             <div className="input-wrap">
               <label className="input-label" htmlFor="fp-new-password">New password</label>
-              <input id="fp-new-password" type="password" className={`input${resetErrors.newPassword ? " input-error" : ""}`} placeholder="NewPassword123" {...registerReset("newPassword", { required: "New password is required", minLength: { value: 8, message: "At least 8 characters" }, pattern: { value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/, message: "Must include uppercase, lowercase, and number" } })} />
+              <div className="password-input-wrap">
+                <input id="fp-new-password" type={showNewPassword ? "text" : "password"} className={`input password-input${resetErrors.newPassword ? " input-error" : ""}`} placeholder="NewPassword123" {...registerReset("newPassword", { required: "New password is required", minLength: { value: 8, message: "At least 8 characters" }, pattern: { value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/, message: "Must include uppercase, lowercase, and number" } })} />
+                <button type="button" className="password-toggle" onClick={() => setShowNewPassword((value) => !value)} aria-label={showNewPassword ? "Hide password" : "Show password"}>
+                  {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {resetErrors.newPassword && <span className="input-error-msg">{resetErrors.newPassword.message}</span>}
             </div>
             <div className="input-wrap">
               <label className="input-label" htmlFor="fp-confirm-password">Confirm new password</label>
-              <input id="fp-confirm-password" type="password" className={`input${resetErrors.confirmNewPassword ? " input-error" : ""}`} placeholder="Repeat new password" {...registerReset("confirmNewPassword", { required: "Please confirm your new password", validate: (value) => value === watchReset("newPassword") || "Passwords do not match" })} />
+              <div className="password-input-wrap">
+                <input id="fp-confirm-password" type={showConfirmPassword ? "text" : "password"} className={`input password-input${resetErrors.confirmNewPassword ? " input-error" : ""}`} placeholder="Repeat new password" {...registerReset("confirmNewPassword", { required: "Please confirm your new password", validate: (value) => value === watchReset("newPassword") || "Passwords do not match" })} />
+                <button type="button" className="password-toggle" onClick={() => setShowConfirmPassword((value) => !value)} aria-label={showConfirmPassword ? "Hide password" : "Show password"}>
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {resetErrors.confirmNewPassword && <span className="input-error-msg">{resetErrors.confirmNewPassword.message}</span>}
             </div>
             <button type="submit" className="btn btn-secondary btn-lg" disabled={loading} style={{ width: "100%" }}>Reset Password</button>

@@ -19,6 +19,11 @@ export async function getMe() {
   return unwrap(res).user;
 }
 
+export async function updateProfile(body) {
+  const res = await apiClient.put(`/auth/profile`, body);
+  return unwrap(res).user;
+}
+
 export async function forgotPassword(email) {
   const res = await apiClient.post(`/auth/forgot-password`, { email });
   return unwrap(res);

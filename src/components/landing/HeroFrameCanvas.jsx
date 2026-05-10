@@ -187,8 +187,10 @@ export default function HeroFrameCanvas() {
     window.addEventListener("scroll",  handleScroll, { passive: true });
     window.addEventListener("resize",  resizeCanvas);
 
+    const state = stateRef.current;
+
     return () => {
-      cancelAnimationFrame(stateRef.current.rafId);
+      cancelAnimationFrame(state.rafId);
       window.removeEventListener("scroll",  handleScroll);
       window.removeEventListener("resize",  resizeCanvas);
     };

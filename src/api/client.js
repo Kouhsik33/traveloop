@@ -42,6 +42,7 @@ export function isApiErrorBody(value) {
     return typeof v.error === "string" && typeof v.code === "string";
 }
 export function getApiErrorMessage(err) {
+    if (err instanceof Error && !axios.isAxiosError(err)) return err.message || "Something went wrong";
     if (!axios.isAxiosError(err)) return "Something went wrong";
     const body = err.response?.data;
     if (isApiErrorBody(body)) {

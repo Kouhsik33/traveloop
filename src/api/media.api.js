@@ -1,6 +1,6 @@
 import { apiClient, unwrap } from "./client";
 
-export async function signUpload(body = { folder: "traveloop", resourceType: "auto" }) {
+export async function signUpload(body = { folder: "traveloop", resourceType: "image" }) {
   const res = await apiClient.post(`/media/sign`, body);
   return unwrap(res);
 }
