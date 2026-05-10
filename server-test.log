@@ -1,0 +1,8 @@
+{"level":"info","message":"Traveloop API listening","nodeEnv":"development","port":3000,"timestamp":"2026-05-10T07:58:24.291Z"}
+{"level":"info","message":"::1 - - [10/May/2026:07:58:25 +0000] \"GET /health HTTP/1.1\" 200 70 \"-\" \"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.8115\"","timestamp":"2026-05-10T07:58:25.285Z"}
+{"durationMs":1436,"level":"info","message":"Email sent","provider":"resend","timestamp":"2026-05-10T07:58:29.072Z"}
+{"level":"info","message":"::1 - - [10/May/2026:07:58:29 +0000] \"POST /api/v1/notifications/email HTTP/1.1\" 200 109 \"-\" \"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.8115\"","timestamp":"2026-05-10T07:58:29.077Z"}
+{"durationMs":673,"level":"info","message":"Phone message sent","provider":"twilio","timestamp":"2026-05-10T07:58:29.789Z"}
+{"level":"info","message":"::1 - - [10/May/2026:07:58:29 +0000] \"POST /api/v1/notifications/sms HTTP/1.1\" 200 107 \"-\" \"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.8115\"","timestamp":"2026-05-10T07:58:29.794Z"}
+{"durationMs":401,"level":"info","message":"Phone message sent","provider":"twilio","timestamp":"2026-05-10T07:58:30.218Z"}
+{"level":"info","message":"::1 - - [10/May/2026:07:58:30 +0000] \"POST /api/v1/notifications/whatsapp HTTP/1.1\" 200 107 \"-\" \"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.8115\"","timestamp":"2026-05-10T07:58:30.223Z"}

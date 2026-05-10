@@ -11,6 +11,7 @@ import { authRouter } from './modules/auth/auth.router';
 import { citiesRouter } from './modules/cities/cities.router';
 import { docsRouter } from './modules/docs/docs.router';
 import { mediaRouter } from './modules/media/media.router';
+import { notificationsRouter } from './modules/notifications/notifications.router';
 import { publicRouter } from './modules/public/public.router';
 import { tripsRouter } from './modules/trips/trips.router';
 import { globalErrorHandler, notFoundHandler } from './middleware/error-handler';
@@ -25,6 +26,7 @@ apiRouter.use('/cities', citiesRouter);
 apiRouter.use('/activities', activitiesRouter);
 apiRouter.use('/ai', aiRouter);
 apiRouter.use('/media', mediaRouter);
+apiRouter.use('/notifications', notificationsRouter);
 apiRouter.use('/docs', docsRouter);
 apiRouter.use('/public', publicRouter);
 

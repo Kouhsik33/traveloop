@@ -24,6 +24,15 @@ jest.mock('../src/modules/auth/auth.service', () => ({
   }
 }));
 
+jest.mock('../src/modules/notifications/notifications.service', () => ({
+  notificationsService: {
+    sendEmail: jest.fn(),
+    sendSms: jest.fn(),
+    sendWhatsApp: jest.fn(),
+    sendPasswordResetOtp: jest.fn()
+  }
+}));
+
 jest.mock('../src/config/prisma', () => ({
   prisma: {
     $queryRaw: jest.fn().mockResolvedValue([{ '?column?': 1 }])

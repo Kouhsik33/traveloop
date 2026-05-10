@@ -32,6 +32,9 @@ const openApiDocument = {
     '/api/v1/ai/packing': { post: { summary: 'Generate packing list' } },
     '/api/v1/ai/budget-estimate': { post: { summary: 'Generate budget estimate' } },
     '/api/v1/media/sign': { post: { summary: 'Sign Cloudinary upload' } },
+    '/api/v1/notifications/email': { post: { summary: 'Send email notification' } },
+    '/api/v1/notifications/sms': { post: { summary: 'Send SMS notification' } },
+    '/api/v1/notifications/whatsapp': { post: { summary: 'Send WhatsApp notification' } },
     '/api/v1/public/trips/{slug}': { get: { summary: 'Get public trip' } }
   }
 };

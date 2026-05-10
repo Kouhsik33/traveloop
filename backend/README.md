@@ -48,9 +48,15 @@ CLOUDINARY_CLOUD_NAME="..."
 CLOUDINARY_API_KEY="..."
 CLOUDINARY_API_SECRET="..."
 RESEND_API_KEY="..."
+RESEND_FROM_EMAIL="Traveloop <no-reply@your-domain.com>"
+TWILIO_ACCOUNT_SID="..."
+TWILIO_AUTH_TOKEN="..."
+TWILIO_SMS_FROM="+15551234567"
+TWILIO_WHATSAPP_FROM="+15551234567"
 ```
 
 If `GEMINI_API_KEY` is missing or Gemini fails, AI endpoints return curated fallback data.
+Email delivery uses Resend. SMS and WhatsApp delivery use Twilio-compatible messaging credentials.
 
 Do not commit `.env`. It is already ignored by `.gitignore`.
 
@@ -489,6 +495,36 @@ Create media record body:
 | `POST` | `/api/v1/ai/packing` | Yes | Generate packing list with Gemini/fallback |
 | `POST` | `/api/v1/ai/budget-estimate` | Yes | Generate per-day budget estimate with Gemini/fallback |
 
+### Notifications
+
+| Method | Path | Auth | Description |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/notifications/email` | Admin | Send an email |
+| `POST` | `/api/v1/notifications/sms` | Admin | Send an SMS |
+| `POST` | `/api/v1/notifications/whatsapp` | Admin | Send a WhatsApp message |
+
+Notification endpoints are admin-only to prevent abuse. Password reset OTP emails are sent automatically through the notification service when `RESEND_API_KEY` and `RESEND_FROM_EMAIL` are configured.
+
+Email body:
+
+```json
+{
+  "to": "user@example.com",
+  "subject": "Trip reminder",
+  "text": "Your trip starts tomorrow.",
+  "html": "<p>Your trip starts tomorrow.</p>"
+}
+```
+
+SMS / WhatsApp body:
+
+```json
+{
+  "to": "+15551234567",
+  "message": "Your Traveloop trip starts tomorrow."
+}
+```
+
 ### Docs
 
 | Method | Path | Auth | Description |
@@ -517,6 +553,7 @@ Implemented:
 - Packing items
 - Media signing and media records
 - AI itinerary, packing, and budget estimate endpoints with fallback
+- Email, SMS, and WhatsApp notification service
 - Lightweight API docs at `/api/v1/docs`
 - Health response with DB status and uptime
 - Cookie auth and origin guard

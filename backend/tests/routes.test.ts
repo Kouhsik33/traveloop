@@ -7,6 +7,7 @@ import { aiService } from '../src/modules/ai/ai.service';
 import { authService } from '../src/modules/auth/auth.service';
 import { citiesService } from '../src/modules/cities/cities.service';
 import { mediaService } from '../src/modules/media/media.service';
+import { notificationsService } from '../src/modules/notifications/notifications.service';
 import { notesService } from '../src/modules/notes/notes.service';
 import { packingService } from '../src/modules/packing/packing.service';
 import { publicService } from '../src/modules/public/public.service';
@@ -209,6 +210,15 @@ jest.mock('../src/modules/ai/ai.service', () => ({
   }
 }));
 
+jest.mock('../src/modules/notifications/notifications.service', () => ({
+  notificationsService: {
+    sendEmail: jest.fn(),
+    sendSms: jest.fn(),
+    sendWhatsApp: jest.fn(),
+    sendPasswordResetOtp: jest.fn()
+  }
+}));
+
 jest.mock('../src/config/prisma', () => ({
   prisma: {
     $queryRaw: jest.fn().mockResolvedValue([{ '?column?': 1 }])
@@ -225,6 +235,7 @@ const mockedPublicService = publicService as jest.Mocked<typeof publicService>;
 const mockedNotesService = notesService as jest.Mocked<typeof notesService>;
 const mockedPackingService = packingService as jest.Mocked<typeof packingService>;
 const mockedMediaService = mediaService as jest.Mocked<typeof mediaService>;
+const mockedNotificationsService = notificationsService as jest.Mocked<typeof notificationsService>;
 
 const authCookie = (): string => {
   const token = jwt.sign(
@@ -233,6 +244,19 @@ const authCookie = (): string => {
       email: user.email,
       role: 'user',
       isAdmin: false
+    },
+    env.JWT_SECRET
+  );
+  return `token=${token}`;
+};
+
+const adminAuthCookie = (): string => {
+  const token = jwt.sign(
+    {
+      sub: user.id,
+      email: user.email,
+      role: 'admin',
+      isAdmin: true
     },
     env.JWT_SECRET
   );
@@ -474,5 +498,39 @@ describe('implemented API route contracts', () => {
       .send({ cityId: city.id, cityName: city.name, vibe: 'comfort' })
       .expect(200);
     await request(app).get('/api/v1/docs/openapi.json').expect(200);
+  });
+
+  it('covers admin notification endpoints', async () => {
+    mockedNotificationsService.sendEmail.mockResolvedValueOnce({
+      provider: 'resend',
+      messageId: 'email_123',
+      status: 'sent'
+    });
+    mockedNotificationsService.sendSms.mockResolvedValueOnce({
+      provider: 'twilio',
+      messageId: 'sms_123',
+      status: 'sent'
+    });
+    mockedNotificationsService.sendWhatsApp.mockResolvedValueOnce({
+      provider: 'twilio',
+      messageId: 'wa_123',
+      status: 'sent'
+    });
+
+    await request(app)
+      .post('/api/v1/notifications/email')
+      .set('Cookie', [adminAuthCookie()])
+      .send({ to: user.email, subject: 'Hello', text: 'Test email' })
+      .expect(200);
+    await request(app)
+      .post('/api/v1/notifications/sms')
+      .set('Cookie', [adminAuthCookie()])
+      .send({ to: '+15551234567', message: 'Test sms' })
+      .expect(200);
+    await request(app)
+      .post('/api/v1/notifications/whatsapp')
+      .set('Cookie', [adminAuthCookie()])
+      .send({ to: '+15551234567', message: 'Test whatsapp' })
+      .expect(200);
   });
 });

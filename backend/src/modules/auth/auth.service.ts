@@ -6,6 +6,7 @@ import type { User } from '../../../shared/types';
 import { env } from '../../config/env';
 import { AppError } from '../../middleware/error-handler';
 import { logger } from '../../utils/logger';
+import { notificationsService } from '../notifications/notifications.service';
 import { authRepository } from './auth.repository';
 import type { ForgotPasswordDto, LoginDto, RegisterDto, ResetPasswordDto } from './auth.dto';
 
@@ -75,8 +76,9 @@ export class AuthService {
     const otpHash = await bcrypt.hash(otp, 12);
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
     await authRepository.updateOtp(user.id, otpHash, expiresAt);
+    await notificationsService.sendPasswordResetOtp(user.email, otp);
 
-    logger.info('Password reset OTP generated', { userId: user.id, action: 'PASSWORD_RESET_OTP' });
+    logger.info('Password reset OTP sent', { userId: user.id, action: 'PASSWORD_RESET_OTP' });
   }
 
   public async resetPassword(dto: ResetPasswordDto): Promise<void> {
