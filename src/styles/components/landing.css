@@ -15,6 +15,218 @@
   overflow: hidden;
 }
 
+/* ── Scroll-driven frame animation additions ───────────────── */
+
+/*
+ * Tall wrapper that creates the scrollable "runway" for the
+ * frame animation. Its height determines how long the user scrolls
+ * while the canvas plays. Does not affect existing layout.
+ */
+.hero-scroll-track {
+  position: relative;          /* Block-level, normal flow */
+  /* Height is set inline by the HeroFrameCanvas component */
+}
+
+/*
+ * Makes the hero section stick while the user scrolls through
+ * the frame sequence inside .hero-scroll-track.
+ */
+.hero-sticky {
+  position: sticky !important;
+  top: 0;
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/*
+ * Canvas background layer — fills the hero section behind all content.
+ * z-index: 0 so the existing ::before/::after pseudo elements and
+ * all hero content layers remain on top.
+ */
+.hero-canvas-bg {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  z-index: 0;
+  /* Canvas inside fills 100%×100% via its own style */
+}
+
+.hero-canvas-bg canvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
+/*
+ * Gradient scrim — ensures the existing hero text, navbar, and
+ * floating cards remain legible over the video frames.
+ * Tuned to match the original hero gradient opacity.
+ */
+.hero-canvas-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    145deg,
+    rgba(61, 64, 91, 0.72)   0%,
+    rgba(74, 77, 107, 0.58)  45%,
+    rgba(85, 88, 120, 0.50)  100%
+  );
+  pointer-events: none;
+}
+
+/*
+ * Lift all existing hero content above the canvas and scrim layers.
+ * Applies only to direct children of the hero section that are NOT
+ * the canvas wrapper or scrim.
+ */
+.hero-sticky .landing-navbar,
+.hero-sticky .landing-hero-body,
+.hero-sticky::before,
+.hero-sticky::after {
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Hero text overlay ────────────────────────────────────────
+ * Positioned bottom-left over the canvas, high contrast using the
+ * Eggshell + Warm palette with strong drop-shadows for legibility.
+ * ──────────────────────────────────────────────────────────── */
+.hero-text-overlay {
+  position: absolute;
+  bottom: 6rem;
+  left: var(--sp-2xl);
+  z-index: 3;
+  max-width: 38rem;
+  pointer-events: auto;
+}
+
+.hero-overlay-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--cl-warm);                    /* Apricot Cream #F2CC8F */
+  margin-bottom: var(--sp-md);
+  padding: var(--sp-xs) var(--sp-md);
+  border-radius: var(--br-full);
+  border: 1px solid rgba(242, 204, 143, 0.4);
+  background: rgba(61, 64, 91, 0.55);       /* Indigo backdrop */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+.hero-overlay-title {
+  font-family: var(--font-display);
+  font-size: clamp(var(--fs-lg), 6vw, var(--fs-xl));
+  font-weight: var(--fw-extrabold);
+  color: #F4F1DE;                           /* Eggshell — max contrast */
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-tight);
+  margin-bottom: var(--sp-md);
+  /* Layered shadows for depth and legibility over any frame */
+  text-shadow:
+    0 2px 4px rgba(0,0,0,0.6),
+    0 4px 16px rgba(0,0,0,0.45),
+    0 8px 32px rgba(0,0,0,0.3);
+}
+
+.hero-overlay-accent {
+  /* Burnt Peach gradient accent — same palette as rest of app */
+  background: linear-gradient(135deg, #E07A5F, #F2CC8F);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 8px rgba(224,122,95,0.5));
+}
+
+.hero-overlay-desc {
+  font-size: var(--fs-base);
+  color: rgba(244, 241, 222, 0.90);         /* Near-white Eggshell */
+  line-height: var(--lh-body);
+  margin-bottom: var(--sp-xl);
+  max-width: 30rem;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.55), 0 2px 12px rgba(0,0,0,0.35);
+}
+
+.hero-overlay-cta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-md);
+  flex-wrap: wrap;
+}
+
+/* ── Scroll mouse indicator ──────────────────────────────────
+ * Classic mouse outline with animated scrolling wheel dot.
+ * Fades out automatically once the user starts scrolling.
+ * ──────────────────────────────────────────────────────────── */
+.hero-scroll-hint {
+  position: absolute;
+  bottom: var(--sp-xl);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-sm);
+  animation: fadeIn 1s 1.5s both;           /* delayed fade-in on load */
+}
+
+.scroll-mouse {
+  width: 26px;
+  height: 42px;
+  border: 2px solid rgba(244, 241, 222, 0.75);
+  border-radius: 13px;
+  display: flex;
+  justify-content: center;
+  padding-top: 6px;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.3),
+    0 4px 16px rgba(0,0,0,0.3);
+}
+
+.scroll-mouse-wheel {
+  width: 4px;
+  height: 8px;
+  background: #F2CC8F;                      /* Apricot Cream */
+  border-radius: 2px;
+  animation: scrollWheelBounce 1.6s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(242,204,143,0.6);
+}
+
+.scroll-mouse-label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: rgba(244, 241, 222, 0.65);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+@keyframes scrollWheelBounce {
+  0%   { transform: translateY(0);   opacity: 1;    }
+  50%  { transform: translateY(10px); opacity: 0.3; }
+  100% { transform: translateY(0);   opacity: 1;    }
+}
+
+@media (max-width: 768px) {
+  .hero-text-overlay {
+    left: var(--sp-lg);
+    bottom: 5rem;
+    max-width: calc(100% - 2 * var(--sp-lg));
+  }
+  .hero-overlay-title {
+    font-size: var(--fs-lg);
+  }
+}
+
+
 .landing-hero::before {
   content: '';
   position: absolute;
@@ -49,6 +261,16 @@
   max-width: var(--max-w-2xl);
   margin-inline: auto;
   width: 100%;
+}
+
+/* Dark navbar for hero — opaque dark background over canvas */
+.landing-navbar-dark {
+  background: rgba(29, 32, 48, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(244, 241, 222, 0.08);
+  max-width: 100%;
+  padding: var(--sp-md) var(--sp-2xl);
 }
 
 .landing-nav-logo {

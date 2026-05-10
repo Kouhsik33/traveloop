@@ -3,6 +3,7 @@ import { ROUTES } from "@/lib/constants";
 import { useTheme } from "@/components/layout/ThemeProvider";
 import { Map, Banknote, Luggage, StickyNote, Globe, Sparkles, Plane, Calendar, Briefcase, Rocket, Umbrella, Castle, Mountain, Building2, Trees, Sun, Moon, Star, MapPin, Heart } from "lucide-react";
 import "@/styles/components/landing.css";
+import HeroFrameCanvas from "@/components/landing/HeroFrameCanvas";
 
 const features = [
   { icon: Map,        variant: "feature-icon-peach", title: "Smart Itinerary Builder", desc: "Plan day-by-day itineraries with stops, activities, and time blocks. Reorder with drag-and-drop ease." },
@@ -40,9 +41,17 @@ export default function LandingPage() {
   return (
     <div style={{ background: "var(--cl-bg)" }}>
       {/* ── Hero ──────────────────────────────────────────── */}
-      <section className="landing-hero">
-        {/* Navbar */}
-        <div className="landing-navbar">
+      {/*
+       * Scroll-track wrapper — creates the tall scrollable region.
+       * The section inside is sticky so it stays in view while the
+       * user scrolls through the canvas frame sequence.
+       */}
+      <div className="hero-scroll-track" style={{ height: "600vh" }}>
+      <section className="landing-hero hero-sticky">
+
+
+        {/* Navbar — dark background */}
+        <div className="landing-navbar landing-navbar-dark">
           <Link to={ROUTES.landing} className="landing-nav-logo">
             <div className="landing-logo-mark">TL</div>
             <span className="landing-logo-text">Travel-Loop</span>
@@ -81,80 +90,20 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Hero content */}
-        <div className="landing-hero-body">
-          <div className="landing-hero-text">
-            <div className="landing-hero-eyebrow">
-              <span style={{ display: "inline-flex" }}><Star size={18} fill="var(--cl-warm)" color="var(--cl-warm)" /></span> The smarter way to travel India
-            </div>
+        {/* Canvas frame-sequence background */}
+        <div className="hero-canvas-bg">
+          <HeroFrameCanvas />
+        </div>
 
-            <h1 className="landing-hero-title">
-              Plan Every{" "}
-              <span className="landing-hero-title-accent">Adventure</span>
-              <br />
-              Like a Pro
-            </h1>
-
-            <p className="landing-hero-desc">
-              Build stunning itineraries, track your budget, manage packing lists,
-              and share your journeys — all in one beautifully crafted travel companion.
-            </p>
-
-            <div className="landing-hero-cta">
-              <Link to={ROUTES.signup} className="btn btn-primary btn-lg">
-                Start Planning Free →
-              </Link>
-              <Link to={ROUTES.login} className="btn btn-secondary btn-lg" style={{ borderColor: "rgba(244,241,222,0.25)", color: "rgba(244,241,222,0.8)" }}>
-                Sign In
-              </Link>
-            </div>
-
-            <div className="hero-stat-row">
-              {[
-                { value: "10k+",   label: "Trips Planned" },
-                { value: "4.9 ★",  label: "User Rating" },
-                { value: "50+",    label: "Destinations" },
-              ].map((s) => (
-                <div key={s.label} className="hero-stat">
-                  <div className="hero-stat-value">{s.value}</div>
-                  <div className="hero-stat-label">{s.label}</div>
-                </div>
-              ))}
-            </div>
+        {/* ── Scroll mouse indicator — bottom center ── */}
+        <div className="hero-scroll-hint" aria-label="Scroll to explore">
+          <div className="scroll-mouse">
+            <div className="scroll-mouse-wheel" />
           </div>
-
-          {/* Floating cards visual */}
-          <div className="landing-hero-visual">
-            <div className="hero-dots hero-dots-tl" />
-            <div className="hero-dots hero-dots-br" />
-
-            {/* Main card */}
-            <div className="hero-card hero-card-main">
-              <div className="hero-card-label" style={{ display: "flex", alignItems: "center", gap: "var(--sp-xs)" }}><MapPin size={14} /> Current Trip</div>
-              <div className="hero-card-title">Goa Beach Escape</div>
-              <div className="hero-card-sub">5 Days · 3 Stops · ₹28,000</div>
-              <div className="hero-card-tag">🟢 Active</div>
-            </div>
-
-            {/* Trip card */}
-            <div className="hero-card hero-card-trip">
-              <div className="hero-card-label" style={{ display: "flex", alignItems: "center", gap: "var(--sp-xs)" }}><Map size={14} /> Next Stop</div>
-              <div className="hero-card-title">Panjim Old Town</div>
-              <div className="hero-card-sub">Day 2 · 3 Activities</div>
-            </div>
-
-            {/* Budget card */}
-            <div className="hero-card hero-card-budget">
-              <div className="hero-card-label" style={{ display: "flex", alignItems: "center", gap: "var(--sp-xs)" }}><Banknote size={14} /> Budget</div>
-              <div className="hero-card-amount">₹28,000</div>
-              <div className="hero-card-sub" style={{ marginTop: "4px" }}>₹11,200 spent · 60% left</div>
-              <div style={{ height: "4px", background: "rgba(244,241,222,0.1)", borderRadius: "99px", marginTop: "10px" }}>
-                <div style={{ width: "40%", height: "100%", background: "var(--cl-teal)", borderRadius: "99px" }} />
-              </div>
-            </div>
-          </div>
+          <span className="scroll-mouse-label">Scroll to explore</span>
         </div>
       </section>
+      </div> {/* end .hero-scroll-track */}
 
       {/* ── Features ──────────────────────────────────────── */}
       <section id="features" style={{ padding: "var(--sp-3xl) var(--sp-xl)", background: "var(--cl-bg)" }}>

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
+import { getUserAvatarUrl } from "@/lib/avatar";
 import { useAuthStore } from "@/store/authStore";
 import { useTheme } from "./ThemeProvider";
 import { logout } from "@/api/auth.api";
@@ -42,10 +43,7 @@ export function Navbar() {
     navigate(ROUTES.landing, { replace: true });
   };
 
-  /* Avatar initial */
-  const initials = user?.name
-    ? user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
-    : "?";
+  const avatarUrl = user ? getUserAvatarUrl(user) : "";
 
   return (
     <header className="navbar">
@@ -103,15 +101,11 @@ export function Navbar() {
                 aria-haspopup="true"
               >
                 <div className="avatar avatar-sm">
-                  {user.avatarUrl ? (
-                    <img 
-                      src={user.avatarUrl} 
-                      alt={user.name} 
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }} 
-                    />
-                  ) : (
-                    initials
-                  )}
+                  <img
+                    src={avatarUrl}
+                    alt={user.name}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
                 </div>
                 <span style={{ fontSize: "var(--fs-sm)", color: "rgba(244,241,222,0.7)" }}>
                   {user.name?.split(" ")[0]}

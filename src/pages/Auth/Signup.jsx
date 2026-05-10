@@ -18,6 +18,7 @@ export default function SignupPage() {
   const { register, handleSubmit, watch, trigger, formState: { errors } } = useForm({
     defaultValues: {
       firstName: "", lastName: "", email: "",
+      phoneNumber: "",
       password: "", confirmPassword: "", travelerProfile: "solo",
       avatarUrl: "",
     },
@@ -55,7 +56,7 @@ export default function SignupPage() {
 
   const nextStep = async () => {
     if (step === 1) {
-      const valid = await trigger(["firstName", "email", "password", "confirmPassword"]);
+      const valid = await trigger(["firstName", "email", "phoneNumber", "password", "confirmPassword"]);
       if (valid) setStep(2);
     } else if (step === 2) {
       setStep(3);
@@ -66,16 +67,21 @@ export default function SignupPage() {
     setError("");
     setLoading(true);
     try {
-      let finalAvatarUrl = "https://api.dicebear.com/7.x/avataaars/svg?seed=" + values.firstName;
+      let finalAvatarUrl;
       
       if (imageFile) {
         const uploadedUrl = await uploadToCloudinary(imageFile);
-        if (uploadedUrl) finalAvatarUrl = uploadedUrl;
+        if (!uploadedUrl) {
+          setError("Profile image upload failed. Please try again or remove the image.");
+          return;
+        }
+        finalAvatarUrl = uploadedUrl;
       }
 
       const user = await apiRegister({
         name: `${values.firstName} ${values.lastName}`.trim(),
         email: values.email,
+        phoneNumber: values.phoneNumber,
         password: values.password,
         confirmPassword: values.confirmPassword,
         avatarUrl: finalAvatarUrl,
@@ -214,6 +220,22 @@ export default function SignupPage() {
                     {...register("email", { required: "Email is required" })}
                   />
                   {errors.email && <span className="input-error-msg">{errors.email.message}</span>}
+                </div>
+                <div className="input-wrap">
+                  <label className="input-label" htmlFor="signup-phone">Phone number</label>
+                  <input
+                    id="signup-phone"
+                    type="tel"
+                    className={`input${errors.phoneNumber ? " input-error" : ""}`}
+                    placeholder="+919876543210"
+                    {...register("phoneNumber", {
+                      pattern: {
+                        value: /^\+?[1-9][\d\s().-]{7,20}$/,
+                        message: "Enter a valid phone number"
+                      }
+                    })}
+                  />
+                  {errors.phoneNumber && <span className="input-error-msg">{errors.phoneNumber.message}</span>}
                 </div>
                 <div className="input-wrap">
                   <label className="input-label" htmlFor="signup-password">Password</label>

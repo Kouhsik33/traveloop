@@ -28,6 +28,7 @@ const PublicItineraryPage  = lazy(() => import("@/pages/Public/PublicItinerary")
 const ForgotPasswordPage   = lazy(() => import("@/pages/Auth/ForgotPassword"));
 const CitiesPage           = lazy(() => import("@/pages/Search/Cities"));
 const DocsPage             = lazy(() => import("@/pages/Trips/Docs"));
+const TripMediaPage        = lazy(() => import("@/pages/Media/TripMedia"));
 
 /* ── Suspense fallback ───────────────────────────────────── */
 function PageLoader() {
@@ -87,6 +88,7 @@ export default function App() {
               <Route path={ROUTES.admin}                        element={<AnimatedPage><AdminPanelPage /></AnimatedPage>} />
               <Route path={ROUTES.cities}                       element={<AnimatedPage><CitiesPage /></AnimatedPage>} />
               <Route path="/trips/:id/docs"                     element={<AnimatedPage><DocsPage /></AnimatedPage>} />
+              <Route path="/trips/:id/media"                    element={<AnimatedPage><TripMediaPage /></AnimatedPage>} />
             </Route>
 
             {/* ── Fallback ──────────────────────────────────── */}

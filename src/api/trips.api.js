@@ -28,7 +28,7 @@ export async function getBudgetSummary(tripId) {
     const res = await apiClient.get(`/trips/${tripId}/budget`);
     return unwrap(res);
 }
-export async function publishTrip(tripId) {
-    const res = await apiClient.post(`/trips/${tripId}/publish`);
+export async function publishTrip(tripId, isPublic) {
+    const res = await apiClient.put(`/trips/${tripId}/publish`, { isPublic });
     return unwrap(res);
 }

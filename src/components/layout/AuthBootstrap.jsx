@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { getMe } from "@/api/auth.api";
 import { useAuthStore } from "@/store/authStore";
 
-/** Hydrates session from HttpOnly cookie (or BYPASS_AUTH) on app mount */
+/** Hydrates session from the backend HttpOnly auth cookie on app mount */
 export function AuthBootstrap({ children }) {
   const setUser    = useAuthStore((s) => s.setUser);
   const doLogout   = useAuthStore((s) => s.logout);

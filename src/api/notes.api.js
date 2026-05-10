@@ -1,10 +1,9 @@
-import { apiClient, unwrap, unwrapPaginated } from "./client";
+import { apiClient, unwrap } from "./client";
 export async function listNotes(tripId) {
     const res = await apiClient.get(`/trips/${tripId}/notes`);
-    const { items, meta } = unwrapPaginated(res);
     return {
-        notes: items,
-        meta
+        notes: unwrap(res),
+        meta: null
     };
 }
 export async function createNote(tripId, body) {

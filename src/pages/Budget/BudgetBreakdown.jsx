@@ -1,209 +1,103 @@
-import { makeId, useLocalState } from "@/lib/localStore";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
+import { getTrip } from "@/api/trips.api";
+import { estimateBudget } from "@/api/ai.api";
+import { getApiErrorMessage } from "@/api/client";
+import { QUERY_KEYS } from "@/lib/constants";
+import { getCityLabel, getStopCity, usd } from "@/lib/format";
+import { useBudget } from "@/hooks/useBudget";
+import { useToast } from "@/components/shared/toast-context";
 import "@/styles/components/budget.css";
 import "@/styles/components/ui.css";
-import { Map, MapPin, Lightbulb, CheckCircle, FileText } from "lucide-react";
+import { BarChart2, Lightbulb, AlertTriangle, Sparkles } from "lucide-react";
 
 export default function BudgetBreakdownPage() {
-  const [localState, setLocalState] = useLocalState();
-  const rows    = localState.invoiceRows;
-  const trip    = localState.trips[0];
-  const subtotal = rows.reduce((s, r) => s + (Number(r.unitCost) || 0), 0);
-  const tax      = Math.round(subtotal * 0.05);
-  const discount = 50;
-  const total    = subtotal + tax - discount;
-  const spent    = subtotal;
-  const budget   = trip?.budget || 0;
-  const pct      = budget > 0 ? Math.min(Math.round((spent / budget) * 100), 100) : 0;
+  const { id } = useParams();
+  const { showToast } = useToast();
+  const { data: trip } = useQuery({ queryKey: QUERY_KEYS.trip(id ?? ""), queryFn: () => getTrip(id), enabled: Boolean(id) });
+  const { data: budget, isLoading, isError } = useBudget(id);
+  const firstCity = getStopCity(trip?.stops?.[0]);
 
-  /* circumference for ring */
-  const R = 40, circ = 2 * Math.PI * R;
-  const dash = circ - (pct / 100) * circ;
+  const aiMutation = useMutation({
+    mutationFn: () => estimateBudget({ cityId: firstCity.id, cityName: getCityLabel(firstCity), vibe: trip?.vibe || "comfort" }),
+    onError: (err) => showToast(getApiErrorMessage(err), "error"),
+  });
 
-  const addRow = () =>
-    setLocalState((cur) => ({
-      ...cur,
-      invoiceRows: [
-        ...cur.invoiceRows,
-        { id: makeId("row"), category: "other", description: "New expense", qty: "1", unitCost: 0 },
-      ],
-    }));
-
-  const updateRow = (id, key, value) =>
-    setLocalState((cur) => ({
-      ...cur,
-      invoiceRows: cur.invoiceRows.map((r) =>
-        r.id === id ? { ...r, [key]: key === "unitCost" ? Number(value) || 0 : value } : r
-      ),
-    }));
-
-  const removeRow = (id) =>
-    setLocalState((cur) => ({
-      ...cur,
-      invoiceRows: cur.invoiceRows.filter((r) => r.id !== id),
-    }));
+  const totalCap = budget?.totalBudgetCapUsd ?? 0;
+  const spent = budget?.totalSpentUsd ?? 0;
+  const pct = totalCap > 0 ? Math.min(Math.round((spent / totalCap) * 100), 100) : 0;
 
   return (
     <div className="budget-root">
-      {/* Header */}
       <div className="budget-header">
         <h1 className="budget-title">Budget Breakdown</h1>
-        <button className="btn btn-secondary">Export PDF</button>
+        <button className="btn btn-primary" disabled={!firstCity || aiMutation.isPending} onClick={() => aiMutation.mutate()}><Sparkles size={16} /> AI Estimate</button>
       </div>
 
-      {/* Summary grid */}
-      <div className="budget-summary-grid">
-        {/* Invoice card */}
-        <div className="budget-invoice-card">
-          <div className="invoice-trip-meta">
-            <div className="invoice-logo" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}><Map size={32} /></div>
-            <div>
-              <div className="invoice-trip-name">{trip?.title || "Trip Invoice"}</div>
-              <div className="invoice-trip-dates">
-                {trip?.startDate && `${trip.startDate} → ${trip.endDate}`}
-              </div>
-              <div className="invoice-trip-place" style={{ display: "flex", alignItems: "center", gap: "var(--sp-xs)" }}><MapPin size={14} /> {trip?.place || "TBD"}</div>
-            </div>
-            <div>
-              <div>
-                <div className="invoice-meta-label">Invoice ID</div>
-                <div className="invoice-meta-value">TL-{(trip?.id || "LOCAL").slice(-6).toUpperCase()}</div>
-              </div>
-              <div style={{ marginTop: "var(--sp-sm)" }}>
-                <div className="invoice-meta-label">Status</div>
-                <span className="badge badge-warm">Pending</span>
+      {isLoading ? <div className="empty-state">Loading budget...</div> : isError ? (
+        <div className="empty-state"><AlertTriangle size={32} /> Unable to load budget.</div>
+      ) : (
+        <>
+          <div className="budget-summary-grid">
+            <div className="budget-invoice-card">
+              <div className="invoice-trip-meta">
+                <div className="invoice-logo" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}><BarChart2 size={32} /></div>
+                <div>
+                  <div className="invoice-trip-name">{trip?.title || "Trip Budget"}</div>
+                  <div className="invoice-trip-dates">{budget?.isOverBudget ? "Over budget" : "Within budget"}</div>
+                </div>
+                <div>
+                  <div className="invoice-meta-label">Spent</div>
+                  <div className="invoice-meta-value">{usd(spent)}</div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Insight card */}
-        <div className="budget-insight-card">
-          <h3 className="budget-insight-title" style={{ display: "flex", alignItems: "center", gap: "var(--sp-xs)" }}><Lightbulb size={18} color="var(--cl-warm)" /> Budget Insights</h3>
-
-          <div className="budget-chart-ring">
-            <div className="budget-ring-chart">
-              <svg viewBox="0 0 100 100" width="100%" height="100%">
-                <circle className="ring-bg"   cx="50" cy="50" r={R} strokeWidth="10" fill="none" />
-                <circle
-                  className="ring-fill"
-                  cx="50" cy="50" r={R}
-                  strokeWidth="10"
-                  fill="none"
-                  strokeDasharray={circ}
-                  strokeDashoffset={dash}
-                />
-              </svg>
-              <div className="ring-pct">{pct}%</div>
-            </div>
-            <div className="budget-ring-legend">
-              <div className="budget-legend-item">
-                <span className="legend-label">Total Budget</span>
-                <span className="legend-value">₹{budget.toLocaleString()}</span>
-              </div>
-              <div className="budget-legend-item">
-                <span className="legend-label">Spent</span>
-                <span className="legend-value" style={{ color: "var(--cl-accent)" }}>₹{spent.toLocaleString()}</span>
-              </div>
-              <div className="budget-legend-item">
-                <span className="legend-label">Remaining</span>
-                <span className="legend-value" style={{ color: "var(--cl-teal)" }}>₹{Math.max(0, budget - spent).toLocaleString()}</span>
+            <div className="budget-insight-card">
+              <h3 className="budget-insight-title" style={{ display: "flex", alignItems: "center", gap: "var(--sp-xs)" }}><Lightbulb size={18} color="var(--cl-warm)" /> Budget Insights</h3>
+              <div className="budget-ring-legend">
+                <div className="budget-legend-item"><span className="legend-label">Total Budget</span><span className="legend-value">{totalCap ? usd(totalCap) : "Not set"}</span></div>
+                <div className="budget-legend-item"><span className="legend-label">Spent</span><span className="legend-value" style={{ color: "var(--cl-accent)" }}>{usd(spent)}</span></div>
+                <div className="budget-legend-item"><span className="legend-label">Remaining</span><span className="legend-value" style={{ color: "var(--cl-teal)" }}>{budget?.remainingUsd == null ? "No cap" : usd(budget.remainingUsd)}</span></div>
+                <div className="budget-legend-item"><span className="legend-label">Used</span><span className="legend-value">{pct}%</span></div>
               </div>
             </div>
           </div>
 
-          <button className="btn btn-surface" style={{ width: "100%" }}>View Full Report</button>
-        </div>
-      </div>
+          {aiMutation.data && (
+            <div className="card" style={{ marginBottom: "var(--sp-lg)" }}>
+              <h3 className="note-card-title">AI daily estimate for {aiMutation.data.cityName}</h3>
+              <p>{usd(aiMutation.data.perDayUsd)} per day: {usd(aiMutation.data.accommodationUsd)} lodging, {usd(aiMutation.data.foodUsd)} food, {usd(aiMutation.data.activitiesUsd)} activities.</p>
+            </div>
+          )}
 
-      {/* Expense table */}
-      <div className="budget-table-wrap">
-        <table className="budget-table">
-          <thead>
-            <tr>
-              {["#", "Category", "Description", "Qty / Details", "Unit Cost", "Amount", ""].map((h) => (
-                <th key={h}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, i) => (
-              <tr key={row.id}>
-                <td style={{ color: "var(--cl-text-muted)", width: "2rem" }}>{i + 1}</td>
-                {["category", "description", "qty"].map((key) => (
-                  <td key={key}>
-                    <input
-                      value={row[key]}
-                      onChange={(e) => updateRow(row.id, key, e.target.value)}
-                      placeholder={key}
-                    />
-                  </td>
+          <div className="budget-table-wrap">
+            <table className="budget-table">
+              <thead><tr><th>Date</th><th>City</th><th>Accommodation</th><th>Activities</th><th>Total</th></tr></thead>
+              <tbody>
+                {(budget?.byDay ?? []).map((row) => (
+                  <tr key={row.stopId}>
+                    <td>{row.date}</td>
+                    <td>{row.cityName}</td>
+                    <td>{usd(row.accommodationCostUsd)}</td>
+                    <td>{usd(row.activitiesCostUsd)}</td>
+                    <td>{usd(row.totalUsd)}</td>
+                  </tr>
                 ))}
-                <td>
-                  <input
-                    type="number"
-                    value={row.unitCost || ""}
-                    onChange={(e) => updateRow(row.id, "unitCost", e.target.value)}
-                    placeholder="0"
-                  />
-                </td>
-                <td style={{ fontWeight: "var(--fw-semibold)", color: "var(--cl-teal)" }}>
-                  ₹{Number(row.unitCost).toLocaleString()}
-                </td>
-                <td>
-                  <button
-                    onClick={() => removeRow(row.id)}
-                    className="btn btn-ghost btn-xs"
-                    style={{ color: "var(--cl-error)" }}
-                    title="Remove row"
-                  >
-                    ✕
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colSpan={5} style={{ textAlign: "right", color: "var(--cl-text-muted)", paddingRight: "var(--sp-md)" }}>
-                Subtotal
-              </td>
-              <td>₹{subtotal.toLocaleString()}</td>
-              <td />
-            </tr>
-            <tr>
-              <td colSpan={5} style={{ textAlign: "right", color: "var(--cl-text-muted)", paddingRight: "var(--sp-md)" }}>
-                Tax (5%)
-              </td>
-              <td>₹{tax.toLocaleString()}</td>
-              <td />
-            </tr>
-            <tr>
-              <td colSpan={5} style={{ textAlign: "right", color: "var(--cl-text-muted)", paddingRight: "var(--sp-md)" }}>
-                Discount
-              </td>
-              <td style={{ color: "var(--cl-teal)" }}>-₹{discount}</td>
-              <td />
-            </tr>
-            <tr style={{ background: "var(--cl-bg-alt)" }}>
-              <td colSpan={5} style={{ textAlign: "right", fontWeight: "var(--fw-bold)", paddingRight: "var(--sp-md)" }}>
-                Total
-              </td>
-              <td className="budget-total-amount">₹{total.toLocaleString()}</td>
-              <td />
-            </tr>
-          </tfoot>
-        </table>
-
-        <div className="budget-table-footer-actions">
-          <button className="btn btn-secondary btn-sm" onClick={addRow}>
-            + Add Expense Row
-          </button>
-          <div style={{ display: "flex", gap: "var(--sp-sm)" }}>
-            <button className="btn btn-teal btn-sm" style={{ display: "flex", alignItems: "center", gap: "var(--sp-xs)" }}><CheckCircle size={14} /> Mark as Paid</button>
-            <button className="btn btn-primary btn-sm" style={{ display: "flex", alignItems: "center", gap: "var(--sp-xs)" }}><FileText size={14} /> Export PDF</button>
+              </tbody>
+            </table>
           </div>
-        </div>
-      </div>
+
+          <div className="notes-grid" style={{ marginTop: "var(--sp-lg)" }}>
+            {(budget?.byCategory ?? []).map((row) => (
+              <div className="card" key={row.category}>
+                <h3 className="note-card-title">{row.category}</h3>
+                <p>{usd(row.totalUsd)} - {row.percentage}% of spend</p>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -1,133 +1,200 @@
-import { makeId, useLocalState } from "@/lib/localStore";
+import { useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getTrip } from "@/api/trips.api";
+import { createStop, deleteStop, listStops } from "@/api/stops.api";
+import { searchActivities, assignActivityToStop, removeActivityFromStop } from "@/api/activities.api";
+import { searchCities } from "@/api/cities.api";
+import { generateItinerary } from "@/api/ai.api";
+import { getApiErrorMessage } from "@/api/client";
+import { QUERY_KEYS, ROUTES } from "@/lib/constants";
+import { formatDate, getCityLabel, getStopCity, usd } from "@/lib/format";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useMap } from "@/hooks/useMap";
+import { MapView } from "@/components/itinerary/MapView";
+import { useToast } from "@/components/shared/toast-context";
 import "@/styles/components/itinerary.css";
 import "@/styles/components/ui.css";
-import { Calendar, Trash2, Plus } from "lucide-react";
+import { Calendar, Trash2, Plus, Sparkles, MapPin } from "lucide-react";
 
 export default function ItineraryBuilderPage() {
-  const [localState, setLocalState] = useLocalState();
-  const sections = localState.itinerarySections;
+  const { id } = useParams();
+  const queryClient = useQueryClient();
+  const { showToast } = useToast();
+  const [cityQuery, setCityQuery] = useState("");
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [activityQuery, setActivityQuery] = useState("");
+  const [activeStopId, setActiveStopId] = useState("");
+  const [form, setForm] = useState({ arrivalDate: "", departureDate: "", notes: "", accommodationName: "", accommodationCost: "" });
+  const debouncedCityQuery = useDebounce(cityQuery);
 
-  const updateSection = (id, key, value) =>
-    setLocalState((cur) => ({
-      ...cur,
-      itinerarySections: cur.itinerarySections.map((s) =>
-        s.id === id ? { ...s, [key]: value } : s
-      ),
-    }));
+  const { data: trip } = useQuery({ queryKey: QUERY_KEYS.trip(id ?? ""), queryFn: () => getTrip(id), enabled: Boolean(id) });
+  const { data: stops = [], isLoading } = useQuery({ queryKey: QUERY_KEYS.stops(id ?? ""), queryFn: () => listStops(id), enabled: Boolean(id) });
+  const { data: routeData } = useMap(id);
+  const { data: cityResults } = useQuery({
+    queryKey: QUERY_KEYS.cities(debouncedCityQuery),
+    queryFn: () => searchCities({ q: debouncedCityQuery, limit: 8 }),
+    enabled: debouncedCityQuery.trim().length >= 2,
+    staleTime: 10 * 60 * 1000,
+  });
 
-  const addSection = () =>
-    setLocalState((cur) => ({
-      ...cur,
-      itinerarySections: [
-        ...cur.itinerarySections,
-        { id: makeId("sec"), title: "New Stop", dateRange: "", budget: 0, info: "Add details about this stop…" },
-      ],
-    }));
+  const activeStop = useMemo(() => stops.find((stop) => stop.id === activeStopId) ?? stops[0], [activeStopId, stops]);
+  const activeCity = getStopCity(activeStop);
+  const { data: activityResults } = useQuery({
+    queryKey: QUERY_KEYS.activities({ cityId: activeCity?.id, q: activityQuery }),
+    queryFn: () => searchActivities({ cityId: activeCity.id, q: activityQuery || undefined, limit: 8 }),
+    enabled: Boolean(activeCity?.id),
+  });
 
-  const removeSection = (id) =>
-    setLocalState((cur) => ({
-      ...cur,
-      itinerarySections: cur.itinerarySections.filter((s) => s.id !== id),
-    }));
+  const invalidateStops = () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.stops(id ?? "") });
+  const addStopMutation = useMutation({
+    mutationFn: () => createStop(id, {
+      cityId: selectedCity.id,
+      orderIndex: stops.length,
+      arrivalDate: form.arrivalDate,
+      departureDate: form.departureDate,
+      notes: form.notes || undefined,
+      accommodationName: form.accommodationName || undefined,
+      accommodationCost: form.accommodationCost === "" ? undefined : Number(form.accommodationCost),
+    }),
+    onSuccess: () => {
+      setSelectedCity(null);
+      setCityQuery("");
+      setForm({ arrivalDate: "", departureDate: "", notes: "", accommodationName: "", accommodationCost: "" });
+      invalidateStops();
+      queryClient.invalidateQueries({ queryKey: ["trips", id, "route"] });
+    },
+    onError: (err) => showToast(getApiErrorMessage(err), "error"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (stopId) => deleteStop(id, stopId),
+    onSuccess: () => {
+      invalidateStops();
+      queryClient.invalidateQueries({ queryKey: ["trips", id, "route"] });
+    },
+    onError: (err) => showToast(getApiErrorMessage(err), "error"),
+  });
+
+  const assignMutation = useMutation({
+    mutationFn: ({ stopId, activityId }) => assignActivityToStop(id, stopId, { activityId }),
+    onSuccess: invalidateStops,
+    onError: (err) => showToast(getApiErrorMessage(err), "error"),
+  });
+
+  const removeActivityMutation = useMutation({
+    mutationFn: ({ stopId, stopActivityId }) => removeActivityFromStop(id, stopId, stopActivityId),
+    onSuccess: invalidateStops,
+    onError: (err) => showToast(getApiErrorMessage(err), "error"),
+  });
+
+  const aiMutation = useMutation({
+    mutationFn: () => generateItinerary({
+      prompt: `${trip?.title || "Trip"} ${stops.map((stop) => getCityLabel(getStopCity(stop))).join(", ")}`,
+      days: Math.max(1, stops.length || 3),
+      vibe: trip?.vibe || "comfort",
+      tripType: trip?.tripType || "solo",
+    }),
+    onError: (err) => showToast(getApiErrorMessage(err), "error"),
+  });
+
+  const addStop = (e) => {
+    e.preventDefault();
+    if (!selectedCity) return showToast("Choose a city from search results first.", "error");
+    if (!form.arrivalDate || !form.departureDate) return showToast("Arrival and departure dates are required.", "error");
+    if (form.departureDate < form.arrivalDate) return showToast("Departure date must be on or after arrival.", "error");
+    addStopMutation.mutate();
+  };
 
   return (
     <div className="itinerary-root">
-      {/* Header */}
       <div className="itinerary-header">
-        <h1 className="itinerary-title">Itinerary Builder</h1>
-        <button className="btn btn-primary" onClick={addSection}>
-          + Add Stop
-        </button>
+        <div>
+          <h1 className="itinerary-title">{trip?.title || "Itinerary Builder"}</h1>
+          <Link to={ROUTES.tripItineraryView(id)} className="btn btn-secondary btn-sm">View itinerary</Link>
+        </div>
+        <button className="btn btn-primary" disabled={aiMutation.isPending} onClick={() => aiMutation.mutate()}><Sparkles size={16} /> AI Ideas</button>
       </div>
 
-      {/* Sections */}
-      {sections.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state-icon"><Calendar size={48} /></div>
-          <div className="empty-state-title">No stops yet</div>
-          <p style={{ color: "var(--cl-text-muted)", fontSize: "var(--fs-sm)" }}>
-            Add your first stop to start building your itinerary.
-          </p>
-          <button className="btn btn-primary" onClick={addSection}>
-            + Add First Stop
-          </button>
+      <MapView stops={stops} routeData={routeData} height="320px" />
+
+      <form className="card" onSubmit={addStop} style={{ display: "grid", gap: "var(--sp-md)" }}>
+        <div className="input-wrap">
+          <label className="input-label">City</label>
+          <input className="input" value={selectedCity ? getCityLabel(selectedCity) : cityQuery} onChange={(e) => { setSelectedCity(null); setCityQuery(e.target.value); }} placeholder="Search city" />
+          {!selectedCity && cityResults?.cities?.length > 0 && (
+            <div className="card" style={{ padding: "var(--sp-xs)", marginTop: "var(--sp-xs)" }}>
+              {cityResults.cities.map((city) => (
+                <button key={city.id} type="button" className="btn btn-ghost btn-sm" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => setSelectedCity(city)}>
+                  <MapPin size={14} /> {getCityLabel(city)}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-      ) : (
-        sections.map((section, index) => (
-          <div key={section.id} className="stop-card">
+        <div className="stop-card-meta">
+          <div className="input-wrap"><label className="input-label">Arrival</label><input className="input" type="date" value={form.arrivalDate} onChange={(e) => setForm((f) => ({ ...f, arrivalDate: e.target.value }))} /></div>
+          <div className="input-wrap"><label className="input-label">Departure</label><input className="input" type="date" min={form.arrivalDate} value={form.departureDate} onChange={(e) => setForm((f) => ({ ...f, departureDate: e.target.value }))} /></div>
+          <div className="input-wrap"><label className="input-label">Accommodation</label><input className="input" value={form.accommodationName} onChange={(e) => setForm((f) => ({ ...f, accommodationName: e.target.value }))} /></div>
+          <div className="input-wrap"><label className="input-label">Cost USD</label><input className="input" type="number" min="0" value={form.accommodationCost} onChange={(e) => setForm((f) => ({ ...f, accommodationCost: e.target.value }))} /></div>
+        </div>
+        <textarea className="input" rows={3} value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} placeholder="Stop notes" />
+        <button className="btn btn-primary" disabled={addStopMutation.isPending}><Plus size={16} /> Add Stop</button>
+      </form>
+
+      {aiMutation.data?.stops?.length > 0 && (
+        <div className="card">
+          <h3 className="note-card-title">AI itinerary ideas</h3>
+          {aiMutation.data.stops.map((stop, index) => (
+            <p key={`${stop.city}-${index}`} style={{ color: "var(--cl-text-muted)" }}>
+              <strong>{stop.city}</strong>: {stop.activities?.map((a) => a.name).join(", ")}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {isLoading ? <div className="empty-state">Loading stops...</div> : stops.length === 0 ? (
+        <div className="empty-state"><div className="empty-state-icon"><Calendar size={48} /></div><div className="empty-state-title">No stops yet</div></div>
+      ) : stops.map((stop, index) => {
+        const city = getStopCity(stop);
+        const stopActivities = stop.activities || stop.stopActivities || [];
+        return (
+          <div key={stop.id} className="stop-card">
             <div className="stop-card-header">
               <div className="stop-card-number">{String(index + 1).padStart(2, "0")}</div>
-              <input
-                className="stop-card-title"
-                value={section.title}
-                onChange={(e) => updateSection(section.id, "title", e.target.value)}
-                placeholder="Stop name…"
-              />
+              <div className="stop-card-title">{getCityLabel(city)}</div>
               <div className="stop-card-actions">
-                <button
-                  className="btn btn-ghost btn-icon"
-                  onClick={() => removeSection(section.id)}
-                  title="Remove stop"
-                  style={{ color: "var(--cl-error)" }}
-                >
-                  <Trash2 size={16} />
-                </button>
+                <button className="btn btn-ghost btn-icon" onClick={() => deleteMutation.mutate(stop.id)} title="Remove stop" style={{ color: "var(--cl-error)" }}><Trash2 size={16} /></button>
               </div>
             </div>
-
             <div className="stop-card-body">
-              <textarea
-                className="stop-card-desc"
-                value={section.info}
-                onChange={(e) => updateSection(section.id, "info", e.target.value)}
-                placeholder="Notes, highlights, things to do…"
-                rows={3}
-              />
-
-              <div className="stop-card-meta">
-                <div className="input-wrap">
-                  <label className="input-label">Date Range</label>
-                  <input
-                    className="input"
-                    placeholder="e.g., Day 1 → Day 2"
-                    value={section.dateRange}
-                    onChange={(e) => updateSection(section.id, "dateRange", e.target.value)}
-                  />
+              <p style={{ color: "var(--cl-text-muted)" }}>{formatDate(stop.arrivalDate)} to {formatDate(stop.departureDate)} {stop.accommodationCost ? `- ${usd(stop.accommodationCost)} lodging` : ""}</p>
+              {stop.notes && <p>{stop.notes}</p>}
+              <button className="btn btn-secondary btn-sm" onClick={() => setActiveStopId(stop.id)}>Find activities</button>
+              {stopActivities.length > 0 && (
+                <div style={{ display: "flex", gap: "var(--sp-xs)", flexWrap: "wrap", marginTop: "var(--sp-sm)" }}>
+                  {stopActivities.map((sa) => (
+                    <button key={sa.id} className="btn btn-ghost btn-xs" onClick={() => removeActivityMutation.mutate({ stopId: stop.id, stopActivityId: sa.id })}>
+                      {sa.activity?.name || "Activity"} x
+                    </button>
+                  ))}
                 </div>
-                <div className="input-wrap">
-                  <label className="input-label">Estimated Budget (₹)</label>
-                  <input
-                    className="input"
-                    type="number"
-                    placeholder="0"
-                    value={section.budget || ""}
-                    onChange={(e) => updateSection(section.id, "budget", Number(e.target.value) || 0)}
-                  />
-                </div>
-              </div>
+              )}
             </div>
           </div>
-        ))
-      )}
+        );
+      })}
 
-      {sections.length > 0 && (
-        <button className="add-section-btn" type="button" onClick={addSection}>
-          <span style={{ display: "flex" }}><Plus size={18} /></span>
-          Add another stop
-        </button>
-      )}
-
-      {sections.length > 0 && (
-        <div style={{ display: "flex", gap: "var(--sp-md)", flexWrap: "wrap" }}>
-          <div style={{ flex: 1, background: "var(--cl-surface)", border: "1px solid var(--cl-border-surface)", borderRadius: "var(--br-xl)", padding: "var(--sp-lg)", color: "var(--cl-text-on-surface)" }}>
-            <div style={{ fontSize: "var(--fs-xs)", color: "rgba(244,241,222,0.55)", marginBottom: "var(--sp-xs)" }}>Total Stops</div>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--fs-lg)", fontWeight: "var(--fw-bold)" }}>{sections.length}</div>
-          </div>
-          <div style={{ flex: 1, background: "var(--cl-surface)", border: "1px solid var(--cl-border-surface)", borderRadius: "var(--br-xl)", padding: "var(--sp-lg)", color: "var(--cl-text-on-surface)" }}>
-            <div style={{ fontSize: "var(--fs-xs)", color: "rgba(244,241,222,0.55)", marginBottom: "var(--sp-xs)" }}>Estimated Budget</div>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--fs-lg)", fontWeight: "var(--fw-bold)", color: "var(--cl-warm)" }}>
-              ₹{sections.reduce((s, sec) => s + (Number(sec.budget) || 0), 0).toLocaleString()}
-            </div>
+      {activeStop && (
+        <div className="card">
+          <h3 className="note-card-title">Activities for {getCityLabel(activeCity)}</h3>
+          <input className="input" value={activityQuery} onChange={(e) => setActivityQuery(e.target.value)} placeholder="Search activities" style={{ marginBottom: "var(--sp-sm)" }} />
+          <div style={{ display: "grid", gap: "var(--sp-sm)" }}>
+            {(activityResults?.activities ?? []).map((activity) => (
+              <button key={activity.id} className="btn btn-secondary btn-sm" onClick={() => assignMutation.mutate({ stopId: activeStop.id, activityId: activity.id })}>
+                + {activity.name} ({usd(activity.estimatedCostUsd)})
+              </button>
+            ))}
           </div>
         </div>
       )}

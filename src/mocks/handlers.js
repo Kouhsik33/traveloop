@@ -3,6 +3,7 @@ const MOCK_USER = {
     id: "user-1",
     email: "dev@traveloop.local",
     name: "Dev Traveler",
+    phoneNumber: "+919876543210",
     avatarUrl: null,
     travelerProfile: "solo",
     isAdmin: false,

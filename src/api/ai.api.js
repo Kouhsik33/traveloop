@@ -3,15 +3,11 @@ export async function generateItinerary(body) {
     const res = await apiClient.post(`/ai/itinerary`, body);
     return unwrap(res);
 }
-export async function generatePackingList(tripId) {
-    const res = await apiClient.post(`/ai/packing`, {
-        tripId
-    });
+export async function generatePackingList(body) {
+    const res = await apiClient.post(`/ai/packing`, body);
     return unwrap(res);
 }
-export async function estimateBudgetForTrip(tripId) {
-    const res = await apiClient.post(`/ai/budget-estimate`, {
-        tripId
-    });
+export async function estimateBudget(body) {
+    const res = await apiClient.post(`/ai/budget-estimate`, body);
     return unwrap(res);
 }

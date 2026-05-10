@@ -1,158 +1,113 @@
-import { makeId, useLocalState } from "@/lib/localStore";
+import { useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getTrip } from "@/api/trips.api";
+import { createPackingItem, deletePackingItem, listPackingItems, updatePackingItem } from "@/api/packing.api";
+import { generatePackingList } from "@/api/ai.api";
+import { getApiErrorMessage } from "@/api/client";
+import { QUERY_KEYS } from "@/lib/constants";
+import { formatDate } from "@/lib/format";
+import { useToast } from "@/components/shared/toast-context";
 import "@/styles/components/packing.css";
 import "@/styles/components/ui.css";
-import { Luggage, PartyPopper, Package, Sparkles, BarChart2 } from "lucide-react";
+import { Luggage, PartyPopper, Package, Sparkles, Trash2 } from "lucide-react";
+
+function daysBetween(startDate, endDate) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const days = Math.round((end - start) / 86400000) + 1;
+  return Number.isFinite(days) && days > 0 ? days : 1;
+}
 
 export default function PackingChecklistPage() {
-  const [localState, setLocalState] = useLocalState();
-  const groups  = localState.packingGroups;
-  const total   = groups.reduce((s, g) => s + g.items.length, 0);
-  const packed  = groups.reduce((s, g) => s + g.items.filter((i) => i.packed).length, 0);
-  const pct     = total ? Math.round((packed / total) * 100) : 0;
+  const { id } = useParams();
+  const queryClient = useQueryClient();
+  const { showToast } = useToast();
+  const [draft, setDraft] = useState({ name: "", category: "general" });
 
-  const R    = 40;
-  const circ = 2 * Math.PI * R;
-  const dash = circ - (pct / 100) * circ;
+  const { data: trip } = useQuery({ queryKey: QUERY_KEYS.trip(id ?? ""), queryFn: () => getTrip(id), enabled: Boolean(id) });
+  const { data: items = [], isLoading } = useQuery({ queryKey: QUERY_KEYS.packing(id ?? ""), queryFn: () => listPackingItems(id), enabled: Boolean(id) });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.packing(id ?? "") });
 
-  const toggleItem = (groupId, itemId) =>
-    setLocalState((cur) => ({
-      ...cur,
-      packingGroups: cur.packingGroups.map((g) =>
-        g.id !== groupId ? g : {
-          ...g,
-          items: g.items.map((i) => i.id === itemId ? { ...i, packed: !i.packed } : i),
+  const createMutation = useMutation({
+    mutationFn: (body) => createPackingItem(id, body),
+    onSuccess: () => { setDraft({ name: "", category: "general" }); invalidate(); },
+    onError: (err) => showToast(getApiErrorMessage(err), "error"),
+  });
+  const updateMutation = useMutation({ mutationFn: ({ itemId, body }) => updatePackingItem(id, itemId, body), onSuccess: invalidate, onError: (err) => showToast(getApiErrorMessage(err), "error") });
+  const deleteMutation = useMutation({ mutationFn: (itemId) => deletePackingItem(id, itemId), onSuccess: invalidate, onError: (err) => showToast(getApiErrorMessage(err), "error") });
+  const aiMutation = useMutation({
+    mutationFn: () => generatePackingList({
+      destination: trip?.title || "the trip",
+      days: daysBetween(formatDate(trip?.startDate), formatDate(trip?.endDate)),
+      tripType: trip?.tripType || "solo",
+      season: trip?.vibe || undefined,
+    }),
+    onSuccess: async (groups) => {
+      for (const group of groups) {
+        for (const item of group.items || []) {
+          await createPackingItem(id, { name: item, category: group.category || "ai", isPacked: false, aiSuggested: true });
         }
-      ),
-    }));
+      }
+      invalidate();
+      showToast("AI packing list added.", "success");
+    },
+    onError: (err) => showToast(getApiErrorMessage(err), "error"),
+  });
 
-  const addItem = () => {
-    const name = window.prompt("Item name:");
-    if (!name?.trim()) return;
-    setLocalState((cur) => ({
-      ...cur,
-      packingGroups: cur.packingGroups.map((g, idx) =>
-        idx === 0 ? { ...g, items: [...g.items, { id: makeId("pk"), name: name.trim(), packed: false }] } : g
-      ),
-    }));
+  const grouped = useMemo(() => items.reduce((acc, item) => {
+    const key = item.category || "general";
+    acc[key] = [...(acc[key] || []), item];
+    return acc;
+  }, {}), [items]);
+  const packed = items.filter((item) => item.isPacked).length;
+  const pct = items.length ? Math.round((packed / items.length) * 100) : 0;
+
+  const addItem = (e) => {
+    e.preventDefault();
+    if (!draft.name.trim()) return;
+    createMutation.mutate({ name: draft.name.trim(), category: draft.category.trim() || "general", isPacked: false });
   };
-
-  const resetAll = () =>
-    setLocalState((cur) => ({
-      ...cur,
-      packingGroups: cur.packingGroups.map((g) => ({
-        ...g,
-        items: g.items.map((i) => ({ ...i, packed: false })),
-      })),
-    }));
 
   return (
     <div className="packing-root">
-      {/* Header */}
       <div className="packing-header">
         <h1 className="packing-title">Packing Checklist</h1>
-        <div style={{ display: "flex", gap: "var(--sp-sm)" }}>
-          <button className="btn btn-secondary btn-sm" onClick={resetAll}>Reset All</button>
-          <button className="btn btn-primary btn-sm" onClick={addItem}>+ Add Item</button>
-        </div>
+        <button className="btn btn-primary btn-sm" disabled={aiMutation.isPending} onClick={() => aiMutation.mutate()}><Sparkles size={16} /> Generate List</button>
       </div>
 
-      {/* Progress banner */}
       <div className="packing-progress-wrap">
         <div className="packing-progress-info">
           <div className="packing-progress-label" style={{ display: "flex", alignItems: "center", gap: "var(--sp-xs)" }}><Luggage size={16} /> Packing Progress</div>
-          <div className="packing-progress-title">
-            {packed} of {total} items packed
-          </div>
-          <div className="packing-progress-sub">
-            {pct === 100 ? <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--sp-xs)" }}><PartyPopper size={14} /> You're all packed! Have a great trip!</span> : `${total - packed} items remaining`}
-          </div>
-          <div className="packing-progress-track">
-            <div className="packing-progress-fill" style={{ width: `${pct}%` }} />
-          </div>
-        </div>
-
-        {/* Ring */}
-        <div className="packing-progress-ring">
-          <svg viewBox="0 0 100 100" width="100%" height="100%">
-            <circle className="packing-ring-bg"   cx="50" cy="50" r={R} strokeWidth="10" fill="none" />
-            <circle
-              className="packing-ring-fill"
-              cx="50" cy="50" r={R}
-              strokeWidth="10" fill="none"
-              strokeDasharray={circ}
-              strokeDashoffset={dash}
-              style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }}
-            />
-          </svg>
-          <div className="packing-progress-pct">{pct}%</div>
+          <div className="packing-progress-title">{packed} of {items.length} items packed</div>
+          <div className="packing-progress-sub">{pct === 100 && items.length ? <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--sp-xs)" }}><PartyPopper size={14} /> You're all packed.</span> : `${items.length - packed} items remaining`}</div>
+          <div className="packing-progress-track"><div className="packing-progress-fill" style={{ width: `${pct}%` }} /></div>
         </div>
       </div>
 
-      {/* Groups */}
-      <div>
-        {groups.map((group) => {
-          const done = group.items.filter((i) => i.packed).length;
-          return (
-            <div key={group.id} className="packing-group">
-              <div className="packing-group-header">
-                <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-sm)" }}>
-                  <span style={{ display: "flex" }}><Package size={18} /></span>
-                  <span className="packing-group-title">{group.title}</span>
-                </div>
-                <span className="packing-group-count">{done}/{group.items.length}</span>
-              </div>
+      <form className="card" onSubmit={addItem} style={{ display: "flex", gap: "var(--sp-sm)", flexWrap: "wrap" }}>
+        <input className="input" value={draft.name} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} placeholder="Item name" style={{ flex: "2 1 14rem" }} />
+        <input className="input" value={draft.category} onChange={(e) => setDraft((d) => ({ ...d, category: e.target.value }))} placeholder="Category" style={{ flex: "1 1 10rem" }} />
+        <button className="btn btn-primary">+ Add Item</button>
+      </form>
 
-              <div className="packing-items-list">
-                {group.items.map((item) => (
-                  <label key={item.id} className={`packing-item${item.packed ? " packed" : ""}`}>
-                    <input
-                      type="checkbox"
-                      className="packing-checkbox"
-                      checked={item.packed}
-                      onChange={() => toggleItem(group.id, item.id)}
-                    />
-                    <span className="packing-item-name">{item.name}</span>
-                  </label>
-                ))}
-                {group.items.length === 0 && (
-                  <div style={{ color: "var(--cl-text-subtle)", fontSize: "var(--fs-xs)", padding: "var(--sp-sm) 0" }}>
-                    No items in this group
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* AI Sidebar */}
-      <div className="packing-sidebar">
-        <div className="packing-ai-card">
-          <div className="packing-ai-title" style={{ display: "flex", alignItems: "center", gap: "var(--sp-xs)" }}><Sparkles size={18} color="var(--cl-warm)" /> AI Suggestions</div>
-          <p className="packing-ai-desc">
-            Let AI generate a personalised packing list based on your destination, weather, and trip duration.
-          </p>
-          <button className="btn btn-primary" style={{ width: "100%" }}>
-            Generate List
-          </button>
-        </div>
-
-        <div style={{ background: "var(--cl-bg)", border: "1px solid var(--cl-border)", borderRadius: "var(--br-xl)", padding: "var(--sp-lg)" }}>
-          <div style={{ fontSize: "var(--fs-sm)", fontWeight: "var(--fw-bold)", color: "var(--cl-text)", marginBottom: "var(--sp-md)", display: "flex", alignItems: "center", gap: "var(--sp-xs)" }}>
-            <BarChart2 size={16} /> Summary
+      {isLoading ? <div className="empty-state">Loading items...</div> : Object.keys(grouped).length === 0 ? <div className="empty-state">No packing items yet.</div> : Object.entries(grouped).map(([category, groupItems]) => (
+        <div key={category} className="packing-group">
+          <div className="packing-group-header">
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-sm)" }}><Package size={18} /><span className="packing-group-title">{category}</span></div>
+            <span className="packing-group-count">{groupItems.filter((i) => i.isPacked).length}/{groupItems.length}</span>
           </div>
-          {[
-            { label: "Total Items", value: total },
-            { label: "Packed",      value: packed, color: "var(--cl-teal)"   },
-            { label: "Remaining",   value: total - packed, color: "var(--cl-accent)" },
-          ].map((s) => (
-            <div key={s.label} style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--sp-xs)", fontSize: "var(--fs-sm)" }}>
-              <span style={{ color: "var(--cl-text-muted)" }}>{s.label}</span>
-              <span style={{ fontWeight: "var(--fw-bold)", color: s.color || "var(--cl-text)" }}>{s.value}</span>
-            </div>
-          ))}
+          <div className="packing-items-list">
+            {groupItems.map((item) => (
+              <label key={item.id} className={`packing-item${item.isPacked ? " packed" : ""}`}>
+                <input type="checkbox" className="packing-checkbox" checked={item.isPacked} onChange={() => updateMutation.mutate({ itemId: item.id, body: { isPacked: !item.isPacked } })} />
+                <span className="packing-item-name">{item.name}{item.aiSuggested ? " (AI)" : ""}</span>
+                <button type="button" className="btn btn-ghost btn-xs" style={{ marginLeft: "auto", color: "var(--cl-error)" }} onClick={() => deleteMutation.mutate(item.id)}><Trash2 size={14} /></button>
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      ))}
     </div>
   );
 }

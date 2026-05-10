@@ -11,3 +11,6 @@ export async function updatePackingItem(tripId, itemId, body) {
     const res = await apiClient.put(`/trips/${tripId}/packing-items/${itemId}`, body);
     return unwrap(res);
 }
+export async function deletePackingItem(tripId, itemId) {
+    await apiClient.delete(`/trips/${tripId}/packing-items/${itemId}`);
+}
