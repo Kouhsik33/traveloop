@@ -9,7 +9,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
             labels: categories.map((c)=>c.category),
             datasets: [
                 {
-                    data: categories.map((c)=>c.totalUsd),
+                    data: categories.map((c)=>c.totalInr),
                     backgroundColor: [
                         "#1B3A6B",
                         "#0D7680",

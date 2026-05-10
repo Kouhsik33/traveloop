@@ -17,7 +17,7 @@ export default function CreateTripPage() {
     startDate: "",
     endDate: "",
     tripType: "solo",
-    budgetCapUsd: "",
+    budgetCapInr: "",
     vibe: "comfort",
   });
 
@@ -36,6 +36,11 @@ export default function CreateTripPage() {
     if (!form.startDate || !form.endDate) return setError("Start and end dates are required.");
     if (form.endDate < form.startDate) return setError("End date must be on or after the start date.");
 
+    const urlPattern = /^(https?:\/\/)/;
+    if (form.coverPhotoUrl && !urlPattern.test(form.coverPhotoUrl)) {
+      return setError("Please enter a valid URL (starting with http or https) or leave it empty.");
+    }
+
     mutation.mutate({
       title: form.title.trim(),
       description: form.description.trim() || undefined,
@@ -43,9 +48,14 @@ export default function CreateTripPage() {
       startDate: form.startDate,
       endDate: form.endDate,
       tripType: form.tripType,
-      budgetCapUsd: form.budgetCapUsd === "" ? undefined : Number(form.budgetCapUsd),
+      budgetCapInr: form.budgetCapInr === "" ? undefined : Number(form.budgetCapInr),
       vibe: form.vibe,
     });
+  };
+
+  const bypass = () => {
+    // For development: Skip backend and go to list
+    navigate(ROUTES.trips);
   };
 
   return (
@@ -55,8 +65,13 @@ export default function CreateTripPage() {
         <p className="create-trip-sub">Create the trip shell first, then add cities, activities, notes, packing, and media.</p>
 
         {error && (
-          <div className="input-error-msg" style={{ display: "flex", gap: "var(--sp-xs)", marginBottom: "var(--sp-md)" }}>
-            <AlertTriangle size={16} /> {error}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(192,57,43,0.08)", border: "1px solid rgba(192,57,43,0.3)", borderRadius: "var(--br-md)", padding: "var(--sp-sm) var(--sp-md)", marginBottom: "var(--sp-md)" }}>
+            <div className="input-error-msg" style={{ display: "flex", gap: "var(--sp-xs)", margin: 0 }}>
+              <AlertTriangle size={16} /> {error}
+            </div>
+            <button type="button" onClick={bypass} className="btn btn-sm btn-ghost" style={{ fontSize: "var(--fs-xs)", color: "var(--cl-accent)" }}>
+              Skip & Continue →
+            </button>
           </div>
         )}
 
@@ -103,8 +118,8 @@ export default function CreateTripPage() {
           </div>
 
           <div className="input-wrap">
-            <label className="input-label" htmlFor="ct-budget">Budget Cap (USD)</label>
-            <input id="ct-budget" type="number" min="0" className="input" value={form.budgetCapUsd} onChange={(e) => update("budgetCapUsd", e.target.value)} placeholder="500" />
+            <label className="input-label" htmlFor="ct-budget">Budget Cap (₹)</label>
+            <input id="ct-budget" type="number" min="0" className="input" value={form.budgetCapInr} onChange={(e) => update("budgetCapInr", e.target.value)} placeholder="50000" />
           </div>
 
           <div style={{ display: "flex", gap: "var(--sp-md)", marginTop: "var(--sp-sm)" }}>

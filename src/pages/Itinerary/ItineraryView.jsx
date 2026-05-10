@@ -45,9 +45,9 @@ export default function ItineraryViewPage() {
                     <div className="activity-name">{getCityLabel(city)}</div>
                     <div style={{ fontSize: "var(--fs-xs)", color: "var(--cl-text-muted)", marginTop: "2px" }}>{formatDate(stop.arrivalDate)} to {formatDate(stop.departureDate)}</div>
                     {stop.notes && <div style={{ fontSize: "var(--fs-xs)", color: "var(--cl-text-muted)", marginTop: "2px" }}>{stop.notes}</div>}
-                    {((stop.activities || stop.stopActivities) || []).map((sa) => <div key={sa.id} style={{ marginTop: "var(--sp-xs)" }}>- {sa.activity?.name || "Activity"} {sa.actualCostUsd ? `(${usd(sa.actualCostUsd)})` : ""}</div>)}
+                    {((stop.activities || stop.stopActivities) || []).map((sa) => <div key={sa.id} style={{ marginTop: "var(--sp-xs)" }}>- {sa.activity?.name || "Activity"} {sa.actualCostInr ? `(${usd(sa.actualCostInr)})` : ""}</div>)}
                   </div>
-                  <div className="activity-cost">{stop.accommodationCost ? usd(stop.accommodationCost) : ""}</div>
+                  <div className="activity-cost">{stop.accommodationCostInr ? usd(stop.accommodationCostInr) : ""}</div>
                 </div>
               </div>
             </div>

@@ -44,7 +44,14 @@ export function isApiErrorBody(value) {
 export function getApiErrorMessage(err) {
     if (!axios.isAxiosError(err)) return "Something went wrong";
     const body = err.response?.data;
-    if (isApiErrorBody(body)) return body.error;
+    if (isApiErrorBody(body)) {
+        if (body.code === "VALIDATION_ERROR" && body.details) {
+            const firstKey = Object.keys(body.details)[0];
+            const firstMsg = body.details[firstKey][0];
+            return `${body.error}: ${firstKey} - ${firstMsg}`;
+        }
+        return body.error;
+    }
     return err.message || "Request failed";
 }
 export function getRateLimitRetryAfter(err) {

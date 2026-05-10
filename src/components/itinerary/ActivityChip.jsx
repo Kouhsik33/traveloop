@@ -10,8 +10,8 @@ export const ActivityChip = /*#__PURE__*/ memo(function ActivityChip({ activity 
             /*#__PURE__*/ _jsxs("span", {
                 className: "ml-1 opacity-80",
                 children: [
-                    "· $",
-                    activity.estimatedCostUsd
+                    "· ₹",
+                    activity.estimatedCostInr
                 ]
             })
         ]

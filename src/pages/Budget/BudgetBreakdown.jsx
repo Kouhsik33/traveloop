@@ -23,8 +23,8 @@ export default function BudgetBreakdownPage() {
     onError: (err) => showToast(getApiErrorMessage(err), "error"),
   });
 
-  const totalCap = budget?.totalBudgetCapUsd ?? 0;
-  const spent = budget?.totalSpentUsd ?? 0;
+  const totalCap = budget?.totalBudgetCapInr ?? 0;
+  const spent = budget?.totalSpentInr ?? 0;
   const pct = totalCap > 0 ? Math.min(Math.round((spent / totalCap) * 100), 100) : 0;
 
   return (
@@ -58,7 +58,7 @@ export default function BudgetBreakdownPage() {
               <div className="budget-ring-legend">
                 <div className="budget-legend-item"><span className="legend-label">Total Budget</span><span className="legend-value">{totalCap ? usd(totalCap) : "Not set"}</span></div>
                 <div className="budget-legend-item"><span className="legend-label">Spent</span><span className="legend-value" style={{ color: "var(--cl-accent)" }}>{usd(spent)}</span></div>
-                <div className="budget-legend-item"><span className="legend-label">Remaining</span><span className="legend-value" style={{ color: "var(--cl-teal)" }}>{budget?.remainingUsd == null ? "No cap" : usd(budget.remainingUsd)}</span></div>
+                <div className="budget-legend-item"><span className="legend-label">Remaining</span><span className="legend-value" style={{ color: "var(--cl-teal)" }}>{budget?.remainingInr == null ? "No cap" : usd(budget.remainingInr)}</span></div>
                 <div className="budget-legend-item"><span className="legend-label">Used</span><span className="legend-value">{pct}%</span></div>
               </div>
             </div>
@@ -67,7 +67,7 @@ export default function BudgetBreakdownPage() {
           {aiMutation.data && (
             <div className="card" style={{ marginBottom: "var(--sp-lg)" }}>
               <h3 className="note-card-title">AI daily estimate for {aiMutation.data.cityName}</h3>
-              <p>{usd(aiMutation.data.perDayUsd)} per day: {usd(aiMutation.data.accommodationUsd)} lodging, {usd(aiMutation.data.foodUsd)} food, {usd(aiMutation.data.activitiesUsd)} activities.</p>
+              <p>{usd(aiMutation.data.perDayInr)} per day: {usd(aiMutation.data.accommodationInr)} lodging, {usd(aiMutation.data.foodInr)} food, {usd(aiMutation.data.activitiesInr)} activities.</p>
             </div>
           )}
 
@@ -79,9 +79,9 @@ export default function BudgetBreakdownPage() {
                   <tr key={row.stopId}>
                     <td>{row.date}</td>
                     <td>{row.cityName}</td>
-                    <td>{usd(row.accommodationCostUsd)}</td>
-                    <td>{usd(row.activitiesCostUsd)}</td>
-                    <td>{usd(row.totalUsd)}</td>
+                    <td>{usd(row.accommodationCostInr)}</td>
+                    <td>{usd(row.activitiesCostInr)}</td>
+                    <td>{usd(row.totalInr)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -92,7 +92,7 @@ export default function BudgetBreakdownPage() {
             {(budget?.byCategory ?? []).map((row) => (
               <div className="card" key={row.category}>
                 <h3 className="note-card-title">{row.category}</h3>
-                <p>{usd(row.totalUsd)} - {row.percentage}% of spend</p>
+                <p>{usd(row.totalInr)} - {row.percentage}% of spend</p>
               </div>
             ))}
           </div>

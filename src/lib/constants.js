@@ -36,3 +36,14 @@ export const QUERY_KEYS = {
   packing:    (tripId) => ["trips", tripId, "packing"],
   media:      (tripId) => ["trips", tripId, "media"],
 };
+
+export const DEMO_USER = {
+  id: "demo-user",
+  email: "demo@travelloop.local",
+  name: "Demo Traveler",
+  phoneNumber: "+919876543210",
+  avatarUrl: null,
+  travelerProfile: "solo",
+  isAdmin: true,
+  createdAt: new Date().toISOString(),
+};

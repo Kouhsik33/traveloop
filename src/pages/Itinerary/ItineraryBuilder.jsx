@@ -136,7 +136,7 @@ export default function ItineraryBuilderPage() {
           <div className="input-wrap"><label className="input-label">Arrival</label><input className="input" type="date" value={form.arrivalDate} onChange={(e) => setForm((f) => ({ ...f, arrivalDate: e.target.value }))} /></div>
           <div className="input-wrap"><label className="input-label">Departure</label><input className="input" type="date" min={form.arrivalDate} value={form.departureDate} onChange={(e) => setForm((f) => ({ ...f, departureDate: e.target.value }))} /></div>
           <div className="input-wrap"><label className="input-label">Accommodation</label><input className="input" value={form.accommodationName} onChange={(e) => setForm((f) => ({ ...f, accommodationName: e.target.value }))} /></div>
-          <div className="input-wrap"><label className="input-label">Cost USD</label><input className="input" type="number" min="0" value={form.accommodationCost} onChange={(e) => setForm((f) => ({ ...f, accommodationCost: e.target.value }))} /></div>
+          <div className="input-wrap"><label className="input-label">Cost ₹</label><input className="input" type="number" min="0" value={form.accommodationCost} onChange={(e) => setForm((f) => ({ ...f, accommodationCost: e.target.value }))} /></div>
         </div>
         <textarea className="input" rows={3} value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} placeholder="Stop notes" />
         <button className="btn btn-primary" disabled={addStopMutation.isPending}><Plus size={16} /> Add Stop</button>
@@ -192,7 +192,7 @@ export default function ItineraryBuilderPage() {
           <div style={{ display: "grid", gap: "var(--sp-sm)" }}>
             {(activityResults?.activities ?? []).map((activity) => (
               <button key={activity.id} className="btn btn-secondary btn-sm" onClick={() => assignMutation.mutate({ stopId: activeStop.id, activityId: activity.id })}>
-                + {activity.name} ({usd(activity.estimatedCostUsd)})
+                + {activity.name} ({usd(activity.estimatedCostInr)})
               </button>
             ))}
           </div>

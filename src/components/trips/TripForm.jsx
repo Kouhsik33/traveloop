@@ -26,7 +26,7 @@ const schema = z.object({
     endDate: z.string().min(1, "End date required"),
     tripType: z.enum(TRIP_TYPE_VALUES),
     vibe: z.enum(VIBE_VALUES).optional(),
-    budgetCapUsd: z.preprocess((val)=>{
+    budgetCapInr: z.preprocess((val)=>{
         if (val === "" || val === undefined || val === null) return undefined;
         const n = Number(val);
         return Number.isFinite(n) ? n : undefined;
@@ -89,12 +89,12 @@ export function TripForm({ defaultValues, onSubmit, submitLabel = "Save trip", i
             }),
             /*#__PURE__*/ _jsx(Input, {
                 id: "trip-cap",
-                label: "Budget cap (USD)",
+                label: "Budget cap (₹)",
                 type: "number",
                 min: 0,
                 step: 1,
-                ...register("budgetCapUsd"),
-                error: errors.budgetCapUsd?.message
+                ...register("budgetCapInr"),
+                error: errors.budgetCapInr?.message
             }),
             /*#__PURE__*/ _jsx(Button, {
                 type: "submit",

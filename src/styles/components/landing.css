@@ -753,11 +753,72 @@
 .dest-card-bg {
   position: absolute;
   inset: 0;
+  background: linear-gradient(135deg, #2A2D47 0%, #3D405B 100%);
   background-size: cover;
-  background-position: center;
+  background-position: top center;
   transition: transform var(--tr-slow);
 }
 .dest-card:hover .dest-card-bg { transform: scale(1.06); }
+
+.dest-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  display: block;
+  opacity: 0;
+  transition: opacity var(--tr-slow);
+}
+
+.dest-card-bg-loaded .dest-card-img {
+  opacity: 1;
+}
+
+.dest-card-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.dest-card-credit {
+  position: absolute;
+  right: var(--sp-sm);
+  bottom: var(--sp-sm);
+  z-index: 2;
+  color: rgba(255,255,255,0.58);
+  font-size: 0.625rem;
+  text-decoration: none;
+  line-height: 1;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.65);
+}
+
+.dest-card-credit:hover {
+  color: rgba(255,255,255,0.82);
+}
+
+.dest-image-skeleton {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent, rgba(244, 241, 222, 0.08), transparent),
+    linear-gradient(135deg, #2A2D47 0%, #3D405B 100%);
+  background-size: 220% 100%, 100% 100%;
+  animation: destImageShimmer 1.35s ease-in-out infinite;
+}
+
+.dest-card:first-child .dest-card-bg,
+.dest-card:first-child .dest-image-skeleton {
+  background:
+    linear-gradient(90deg, transparent, rgba(244, 241, 222, 0.08), transparent),
+    linear-gradient(135deg, #3D405B 0%, #4A4D6B 100%);
+  background-size: 220% 100%, 100% 100%;
+}
+
+@keyframes destImageShimmer {
+  0% { background-position: 180% 0, center; }
+  100% { background-position: -80% 0, center; }
+}
 
 .dest-card-overlay {
   position: absolute;

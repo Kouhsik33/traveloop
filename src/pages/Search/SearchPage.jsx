@@ -6,12 +6,33 @@ import { searchCities } from "@/api/cities.api";
 import { listTrips } from "@/api/trips.api";
 import { QUERY_KEYS, ROUTES } from "@/lib/constants";
 import { getCityLabel, usd } from "@/lib/format";
+import { getCityFromTitle } from "@/lib/cityImages";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useDestinationImage } from "@/hooks/useDestinationImage";
+import { CityImageThumb, UnsplashCredit } from "@/components/shared/CityImageThumb";
 import "@/styles/components/search.css";
 import "@/styles/components/ui.css";
-import { Search, Map, MapPin, Calendar, Clock } from "lucide-react";
+import { Search, Map, MapPin, Calendar } from "lucide-react";
 
 const filters = ["All", "Trips", "Destinations", "Activities"];
+
+function ActivityResultCard({ activity }) {
+  const city = activity.city?.name || activity.city || getCityFromTitle(activity.name || activity.title);
+  const { data: image } = useDestinationImage(city);
+
+  return (
+    <div className="search-result-card">
+      <div className="search-result-thumb">
+        <CityImageThumb city={city} title={activity.name} />
+      </div>
+      <div className="search-result-body">
+        <div className="search-result-name">{activity.name}</div>
+        <div className="search-result-meta">{activity.category} - {usd(activity.estimatedCostInr)}</div>
+        <UnsplashCredit image={image} />
+      </div>
+    </div>
+  );
+}
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
@@ -48,7 +69,7 @@ export default function SearchPage() {
             <div className="search-results-grid">
               {tripResults.map((trip) => <Link key={trip.id} to={ROUTES.tripDetail(trip.id)} className="search-result-card"><div className="search-result-thumb"><Map size={24} /></div><div className="search-result-body"><div className="search-result-name">{trip.title}</div><div className="search-result-meta"><Calendar size={14} /> {trip.startDate}</div></div></Link>)}
               {cityResults.map((city) => <div key={city.id} className="search-result-card"><div className="search-result-thumb"><MapPin size={24} /></div><div className="search-result-body"><div className="search-result-name">{city.name}</div><div className="search-result-meta">{getCityLabel(city)}</div></div></div>)}
-              {activityResults.map((activity) => <div key={activity.id} className="search-result-card"><div className="search-result-thumb"><Clock size={24} /></div><div className="search-result-body"><div className="search-result-name">{activity.name}</div><div className="search-result-meta">{activity.category} - {usd(activity.estimatedCostUsd)}</div></div></div>)}
+              {activityResults.map((activity) => <ActivityResultCard key={activity.id} activity={activity} />)}
             </div>
           )}
         </>

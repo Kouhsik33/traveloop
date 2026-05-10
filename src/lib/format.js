@@ -5,11 +5,11 @@ export function formatDate(value) {
 
 export function usd(value) {
   const n = Number(value ?? 0);
-  return `$${Number.isFinite(n) ? n.toLocaleString() : "0"}`;
+  return `₹${Number.isFinite(n) ? n.toLocaleString("en-IN") : "0"}`;
 }
 
 export function getTripBudget(trip) {
-  return Number(trip?.budgetCapUsd ?? trip?.budget ?? 0);
+  return Number(trip?.budgetCapInr ?? trip?.budget ?? 0);
 }
 
 export function getCityLabel(city) {

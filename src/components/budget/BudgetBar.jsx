@@ -1,7 +1,7 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 export function BudgetBar({ summary }) {
-    const cap = summary.totalBudgetCapUsd;
-    const spent = summary.totalSpentUsd;
+    const cap = summary.totalBudgetCapInr;
+    const spent = summary.totalSpentInr;
     const pct = cap !== null && cap > 0 ? Math.min(100, spent / cap * 100) : spent > 0 ? 100 : 0;
     return /*#__PURE__*/ _jsxs("div", {
         className: "space-y-2",
@@ -15,9 +15,9 @@ export function BudgetBar({ summary }) {
                     /*#__PURE__*/ _jsxs("span", {
                         className: "font-medium",
                         children: [
-                            "$",
+                            "₹",
                             spent.toFixed(0),
-                            cap !== null ? ` / $${cap.toFixed(0)}` : ""
+                            cap !== null ? ` / ₹${cap.toFixed(0)}` : ""
                         ]
                     })
                 ]
@@ -36,11 +36,11 @@ export function BudgetBar({ summary }) {
                     }
                 })
             }),
-            summary.remainingUsd !== null ? /*#__PURE__*/ _jsxs("p", {
+            summary.remainingInr !== null ? /*#__PURE__*/ _jsxs("p", {
                 className: "text-sm text-gray-600",
                 children: [
-                    "Remaining: $",
-                    summary.remainingUsd.toFixed(0)
+                    "Remaining: ₹",
+                    summary.remainingInr.toFixed(0)
                 ]
             }) : null
         ]

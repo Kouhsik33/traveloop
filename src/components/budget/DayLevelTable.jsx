@@ -52,22 +52,22 @@ export function DayLevelTable({ rows }) {
                                 /*#__PURE__*/ _jsxs("td", {
                                     className: "px-4 py-2 text-right",
                                     children: [
-                                        "$",
-                                        r.accommodationCostUsd.toFixed(0)
+                                        "₹",
+                                        r.accommodationCostInr.toFixed(0)
                                     ]
                                 }),
                                 /*#__PURE__*/ _jsxs("td", {
                                     className: "px-4 py-2 text-right",
                                     children: [
-                                        "$",
-                                        r.activitiesCostUsd.toFixed(0)
+                                        "₹",
+                                        r.activitiesCostInr.toFixed(0)
                                     ]
                                 }),
                                 /*#__PURE__*/ _jsxs("td", {
                                     className: "px-4 py-2 text-right font-medium",
                                     children: [
-                                        "$",
-                                        r.totalUsd.toFixed(0)
+                                        "₹",
+                                        r.totalInr.toFixed(0)
                                     ]
                                 })
                             ]

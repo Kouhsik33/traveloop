@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/lib/constants";
 import { useTheme } from "@/components/layout/ThemeProvider";
+import { usd } from "@/lib/format";
 import { Map, Banknote, Luggage, StickyNote, Globe, Sparkles, Plane, Calendar, Briefcase, Rocket, Umbrella, Castle, Mountain, Building2, Trees, Sun, Moon, Star, MapPin, Heart } from "lucide-react";
 import "@/styles/components/landing.css";
 import HeroFrameCanvas from "@/components/landing/HeroFrameCanvas";
+import DestinationImage from "@/components/landing/DestinationImage";
 
 const features = [
   { icon: Map,        variant: "feature-icon-peach", title: "Smart Itinerary Builder", desc: "Plan day-by-day itineraries with stops, activities, and time blocks. Reorder with drag-and-drop ease." },
@@ -28,11 +30,12 @@ const testimonials = [
 ];
 
 const destinations = [
-  { name: "Goa",      icon: Umbrella, trips: "2.4k trips", big: true },
-  { name: "Jaipur",   icon: Castle, trips: "1.8k trips" },
-  { name: "Manali",   icon: Mountain, trips: "1.2k trips" },
-  { name: "Mysuru",   icon: Castle, trips: "900 trips"  },
-  { name: "Kerala",   icon: Trees, trips: "1.5k trips" },
+  { name: "Goa",      trips: "Heritage walk",     category: "cultural",    price: 1500, icon: Castle, big: true },
+  { name: "Gokarna",  trips: "Heritage walk",     category: "cultural",    price: 1500, icon: Castle },
+  { name: "Goa",      trips: "Local food trail",  category: "food",        price: 1800, icon: Trees },
+  { name: "Gokarna",  trips: "Local food trail",  category: "food",        price: 1800, icon: Mountain },
+  { name: "Goa",      trips: "Museum visit",      category: "sightseeing", price: 800,  icon: Castle },
+  { name: "Gokarna",  trips: "Museum visit",      category: "sightseeing", price: 800,  icon: Mountain },
 ];
 
 export default function LandingPage() {
@@ -84,8 +87,8 @@ export default function LandingPage() {
             <Link to={ROUTES.login}  className="btn btn-ghost btn-sm" style={{ color: "rgba(244,241,222,0.75)" }}>
               Sign In
             </Link>
-            <Link to={ROUTES.signup} className="btn btn-primary btn-sm">
-              Get Started →
+            <Link to={ROUTES.login} className="btn btn-primary btn-sm">
+              Sign In →
             </Link>
           </div>
         </div>
@@ -166,25 +169,19 @@ export default function LandingPage() {
           </div>
 
           <div className="destinations-grid">
-            {destinations.map((d) => (
-              <div key={d.name} className={`dest-card${d.big ? " dest-card-big" : ""}`}>
-                <div
-                  className="dest-card-bg"
-                  style={{
-                    background: d.big
-                      ? "linear-gradient(135deg, #3D405B 0%, #4A4D6B 100%)"
-                      : "linear-gradient(135deg, #2A2D47 0%, #3D405B 100%)",
-                    display: "grid",
-                    placeItems: "center",
-                    fontSize: d.big ? "5rem" : "3.5rem",
-                  }}
-                >
-                  <d.icon size={d.big ? 64 : 48} color="rgba(255,255,255,0.2)" />
-                </div>
+            {destinations.map((d, index) => (
+              <div key={`${d.name}-${index}`} className={`dest-card${d.big ? " dest-card-big" : ""}`}>
+                <DestinationImage 
+                  name={d.name} 
+                  city={d.name} 
+                  query={`${d.trips} in ${d.name}`} 
+                  icon={d.icon} 
+                  big={d.big} 
+                />
                 <div className="dest-card-overlay" />
                 <div className="dest-card-content">
-                  <div className="dest-card-name">{d.name}</div>
-                  <div className="dest-card-trips">{d.trips}</div>
+                  <div className="dest-card-name">{d.trips} in {d.name}</div>
+                  <div className="dest-card-trips">{d.category} - {usd(d.price)}</div>
                 </div>
               </div>
             ))}
@@ -231,7 +228,7 @@ export default function LandingPage() {
             </p>
             <div className="cta-actions">
               <Link
-                to={ROUTES.signup}
+                to={ROUTES.login}
                 className="btn btn-lg"
                 style={{
                   background: "#fff",
@@ -240,7 +237,7 @@ export default function LandingPage() {
                   boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
                 }}
               >
-                Create Free Account →
+                Sign In & Plan →
               </Link>
               <Link
                 to={ROUTES.login}
