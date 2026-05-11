@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { ROUTES, DEMO_USER } from "@/lib/constants";
+import { ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/store/authStore";
 import { login } from "@/api/auth.api";
+import { getApiErrorMessage } from "@/api/client";
 import "@/styles/components/auth.css";
 import "@/styles/components/ui.css";
 import { Map, Banknote, Luggage, Globe, Plane, AlertTriangle, Eye, EyeOff } from "lucide-react";
@@ -26,13 +27,12 @@ export default function LoginPage() {
     try {
       const user = await login(values);
       setUser(user);
-    } catch {
-      // Bypass: login failed (likely backend down), use demo user
-      setUser(DEMO_USER);
-    } finally {
-      setLoading(false);
       const from = location.state?.from || ROUTES.home;
       navigate(from, { replace: true });
+    } catch (error) {
+      setError(getApiErrorMessage(error));
+    } finally {
+      setLoading(false);
     }
   };
 

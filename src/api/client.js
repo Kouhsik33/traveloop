@@ -17,9 +17,16 @@ function getEnvBaseUrl() {
 apiClient.interceptors.response.use((res)=>res, (err)=>{
     if (axios.isAxiosError(err) && err.response?.status === 401) {
         const reqUrl = err.config?.url ?? "";
-        /** Bootstrap `GET /auth/me` should not hard-redirect — playbook §3.5 */ const isMeCheck = reqUrl.includes("/auth/me");
+        const publicAuthRoutes = [
+            "/auth/login",
+            "/auth/register",
+            "/auth/forgot-password",
+            "/auth/reset-password",
+            "/auth/me"
+        ];
+        const isPublicAuthRoute = publicAuthRoutes.some((path) => reqUrl.includes(path));
         useAuthStore.getState().logout();
-        if (!isMeCheck) {
+        if (!isPublicAuthRoute) {
             window.location.href = "/login";
         }
     }
