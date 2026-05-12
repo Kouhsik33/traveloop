@@ -26,7 +26,7 @@ export default function CitiesPage() {
   const visibleCities = region === "all" ? cities : cities.filter((city) => city.region === region);
 
   return (
-    <div className="trips-root" style={{ maxWidth: "1200px", margin: "0 auto" }}>
+    <div className="trips-root" style={{ maxWidth: "var(--max-w-xl)", margin: "0 auto" }}>
       <div className="trips-header" style={{ marginBottom: "var(--sp-xl)", textAlign: "center" }}>
         <h1 className="trips-title" style={{ fontSize: "var(--fs-3xl)", marginBottom: "var(--sp-sm)" }}>Explore Destinations</h1>
         <p style={{ color: "var(--cl-text-muted)", fontSize: "var(--fs-lg)", maxWidth: "600px", margin: "0 auto" }}>
