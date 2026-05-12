@@ -6,7 +6,7 @@ import { forgotPassword, resetPassword } from "@/api/auth.api";
 import { getApiErrorMessage } from "@/api/client";
 import "@/styles/components/auth.css";
 import "@/styles/components/ui.css";
-import { AlertTriangle, CheckCircle, Eye, EyeOff, Key, Mail, Shield } from "lucide-react";
+import { AlertTriangle, CheckCircle, Eye, EyeOff, Key, Mail, Shield, Plane } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const [error, setError] = useState("");
@@ -65,7 +65,7 @@ export default function ForgotPasswordPage() {
       <div className="auth-panel">
         <div className="auth-panel-brand">
           <Link to={ROUTES.landing} style={{ display: "flex", alignItems: "center", gap: "var(--sp-sm)", textDecoration: "none" }}>
-            <div className="auth-panel-logo-mark">TL</div>
+            <div className="auth-panel-logo-mark"><Plane size={24} strokeWidth={2.5} /></div>
             <span className="auth-panel-brand-name">Travel-Loop</span>
           </Link>
         </div>

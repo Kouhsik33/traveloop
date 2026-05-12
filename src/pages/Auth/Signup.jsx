@@ -6,7 +6,7 @@ import { useAuthStore } from "@/store/authStore";
 import { register as apiRegister } from "@/api/auth.api";
 import "@/styles/components/auth.css";
 import "@/styles/components/ui.css";
-import { Rocket, Lock, Sparkles, Globe, Users, Plane, AlertTriangle, Luggage, HeartHandshake, Camera, User } from "lucide-react";
+import { Rocket, Lock, Sparkles, Globe, Users, Plane, AlertTriangle, Luggage, HeartHandshake, Camera, User, Eye, EyeOff } from "lucide-react";
 
 export default function SignupPage() {
   const navigate  = useNavigate();
@@ -14,6 +14,8 @@ export default function SignupPage() {
   const [error, setError]     = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep]       = useState(1);
+  const [showPassword, setShowPassword]               = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { register, handleSubmit, watch, trigger, formState: { errors } } = useForm({
     defaultValues: {
@@ -111,7 +113,7 @@ export default function SignupPage() {
       <div className="auth-panel">
         <div className="auth-panel-brand">
           <Link to={ROUTES.landing} style={{ display: "flex", alignItems: "center", gap: "var(--sp-sm)", textDecoration: "none" }}>
-            <div className="auth-panel-logo-mark">TL</div>
+            <div className="auth-panel-logo-mark"><Plane size={24} strokeWidth={2.5} /></div>
             <span className="auth-panel-brand-name">Travel-Loop</span>
           </Link>
         </div>
@@ -169,23 +171,6 @@ export default function SignupPage() {
                 ? "Help us personalise your experience"
                 : "Add a profile picture (optional)"}
             </p>
-            {step === 1 && (
-              <button
-                type="button"
-                onClick={() => navigate(ROUTES.login)}
-                style={{
-                  marginTop: "var(--sp-sm)",
-                  fontSize: "var(--fs-xs)",
-                  color: "var(--cl-accent)",
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  textDecoration: "underline"
-                }}
-              >
-                Already have an account or want to use a Guest Account?
-              </button>
-            )}
           </div>
 
           {/* Step indicator */}
@@ -247,6 +232,7 @@ export default function SignupPage() {
                   />
                   {errors.email && <span className="input-error-msg">{errors.email.message}</span>}
                 </div>
+
                 <div className="input-wrap">
                   <label className="input-label" htmlFor="signup-phone">Phone number</label>
                   <input
@@ -255,9 +241,13 @@ export default function SignupPage() {
                     className={`input${errors.phoneNumber ? " input-error" : ""}`}
                     placeholder="+919876543210"
                     {...register("phoneNumber", {
-                      pattern: {
-                        value: /^\+?[1-9][\d\s().-]{7,20}$/,
-                        message: "Enter a valid phone number"
+                      validate: (val) => {
+                        if (!val) return true;
+                        const clean = val.replace(/\s/g, "");
+                        if (clean.startsWith("+91")) {
+                          return /^\d{10}$/.test(clean.slice(3)) || "Enter 10 digits after +91";
+                        }
+                        return /^\d{10}$/.test(clean) || "Enter a 10-digit phone number";
                       }
                     })}
                   />
@@ -265,39 +255,49 @@ export default function SignupPage() {
                 </div>
                 <div className="input-wrap">
                   <label className="input-label" htmlFor="signup-password">Password</label>
-                  <input
-                    id="signup-password"
-                    type="password"
-                    className={`input${errors.password ? " input-error" : ""}`}
-                    placeholder="At least 8 characters"
-                    {...register("password", {
-                      required: "Password is required",
-                      minLength: { value: 8, message: "At least 8 characters" },
-                      pattern: {
-                        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
-                        message: "Must include uppercase, lowercase, and number"
-                      }
-                    })}
-                  />
+                  <div className="password-input-wrap">
+                    <input
+                      id="signup-password"
+                      type={showPassword ? "text" : "password"}
+                      className={`input password-input${errors.password ? " input-error" : ""}`}
+                      placeholder="At least 8 characters"
+                      {...register("password", {
+                        required: "Password is required",
+                        minLength: { value: 8, message: "At least 8 characters" },
+                        pattern: {
+                          value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
+                          message: "Must include uppercase, lowercase, and number"
+                        }
+                      })}
+                    />
+                    <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Hide password" : "Show password"}>
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                   {errors.password && <span className="input-error-msg">{errors.password.message}</span>}
                 </div>
 
                 <div className="input-wrap">
                   <label className="input-label" htmlFor="signup-confirm-password">Confirm Password</label>
-                  <input
-                    id="signup-confirm-password"
-                    type="password"
-                    className={`input${errors.confirmPassword ? " input-error" : ""}`}
-                    placeholder="Repeat your password"
-                    {...register("confirmPassword", {
-                      required: "Please confirm your password",
-                      validate: (val) => {
-                        if (watch('password') !== val) {
-                          return "Passwords do not match";
-                        }
-                      },
-                    })}
-                  />
+                  <div className="password-input-wrap">
+                    <input
+                      id="signup-confirm-password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      className={`input password-input${errors.confirmPassword ? " input-error" : ""}`}
+                      placeholder="Repeat your password"
+                      {...register("confirmPassword", {
+                        required: "Please confirm your password",
+                        validate: (val) => {
+                          if (watch('password') !== val) {
+                            return "Passwords do not match";
+                          }
+                        },
+                      })}
+                    />
+                    <button type="button" className="password-toggle" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? "Hide password" : "Show password"}>
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                   {errors.confirmPassword && <span className="input-error-msg">{errors.confirmPassword.message}</span>}
                 </div>
 
