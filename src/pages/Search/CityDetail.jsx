@@ -227,8 +227,10 @@ export default function CityDetailPage() {
               </section>
             )}
 
-            {/* Top Attractions & Hidden Gems */}
-            <div className="highlights-grid">
+          </div>
+
+          <div className="destination-sidebar">
+            <div className="highlights-grid sidebar-highlights">
               {topAttractions?.length > 0 && (
                 <div className="highlight-card">
                   <h3>Top Activities</h3>
@@ -247,9 +249,12 @@ export default function CityDetailPage() {
               )}
             </div>
           </div>
-          <div className="destination-sidebar">
-            {/* Quick Info Card */}
-            <div className="info-card quick-facts">
+        </div>
+
+        {/* ── Info Row — 3 cards side by side ── */}
+        <div className="sidebar-row">
+          {/* Quick Facts */}
+          <div className="info-card quick-facts">
               <h3 className="info-title"><Info size={18} /> Quick Facts</h3>
               
               <div className="fact-item">
@@ -339,9 +344,10 @@ export default function CityDetailPage() {
               )}
             </div>
 
-            {/* Restaurants */}
+            {/* Third column: Restaurants + Safety Tips stacked */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-sm)" }}>
             {restaurants?.length > 0 && (
-              <div className="info-card">
+              <div className="info-card" style={{ marginBottom: 0 }}>
                 <h3 className="info-title"><Utensils size={18} /> Top Restaurants</h3>
                 <div className="restaurant-list">
                   {restaurants.map((rest, i) => (
@@ -363,15 +369,15 @@ export default function CityDetailPage() {
 
             {/* Safety Tips */}
             {safetyTips?.length > 0 && (
-              <div className="info-card safety-card">
+              <div className="info-card safety-card" style={{ marginBottom: 0 }}>
                 <h3 className="info-title"><ShieldAlert size={18} color="var(--cl-warning)" /> Travel Tips</h3>
                 <ul className="safety-list">
                   {safetyTips.map((tip, i) => <li key={i}>{tip}</li>)}
                 </ul>
               </div>
             )}
-          </div>
-        </div>
+            </div>{/* end third column */}
+          </div>{/* end sidebar-row */}
 
         {/* ── Transport Routes (Full Width) ────────────────── */}
         <section className="destination-section" style={{ marginTop: "var(--sp-2xl)" }}>
