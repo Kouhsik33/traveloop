@@ -38,7 +38,7 @@ export default function TripListPage() {
   const trips = data?.trips ?? [];
 
   return (
-    <div className="trips-root" style={{ maxWidth: "1200px", margin: "0 auto", paddingBottom: "var(--sp-4xl)" }}>
+    <div className="trips-root" style={{ maxWidth: "var(--max-w-xl)", margin: "0 auto", paddingBottom: "var(--sp-4xl)" }}>
       <div className="trips-header" style={{ marginBottom: "var(--sp-2xl)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "var(--sp-lg)" }}>
         <div>
           <h1 className="trips-title" style={{ fontSize: "var(--fs-3xl)", display: "flex", alignItems: "center", gap: "var(--sp-sm)", marginBottom: "var(--sp-xs)" }}>

@@ -139,8 +139,8 @@
   --max-w-sm:  30rem;
   --max-w-md:  42rem;
   --max-w-lg:  56rem;
-  --max-w-xl:  72rem;
-  --max-w-2xl: 86rem;
+  --max-w-xl:  1600px;
+  --max-w-2xl: 1800px;
 
   /* ── Focus Ring ──────────────────────────────────────── */
   --focus-ring: 0 0 0 3px rgba(224, 122, 95, 0.4);

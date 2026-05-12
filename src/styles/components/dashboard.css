@@ -1,6 +1,6 @@
 /* ── Dashboard ───────────────────────────────────────────── */
 .dashboard-root {
-  width: min(100%, 1280px);
+  width: min(100%, var(--max-w-xl));
   margin-inline: auto;
   /* padding: var(--sp-3xl) var(--sp-lg) var(--sp-5xl); */
   padding: 30px 0px 30px;
