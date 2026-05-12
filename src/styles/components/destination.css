@@ -109,7 +109,7 @@
 }
 
 .destination-container {
-  max-width: 1200px;
+  max-width: var(--max-w-xl);
   margin: 0 auto;
   padding: 0 var(--sp-xl);
 }
