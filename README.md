@@ -54,7 +54,7 @@ Traveloop solves this in one platform:
 | **Traveler Profile Engine** | Personalization driven by *who* is traveling — family, senior, couple, solo, group — filters activities, packing lists, and recommendations end-to-end |
 | **Regional DNA Mode** | Curated city data surfaces region-specific hidden gems (e.g. Godavari delta boat rides, Amaravathi stupa, Kakinada coast) instead of generic tourist routes |
 | **Day-Level Budget Guard** | Per-day cost breakdown with over-budget alerts computed server-side via SQL aggregation — not just a total |
-| **AI-Assisted Planning** | Gemini 1.5 Flash generates itineraries, packing lists, and budget estimates with static curated fallback if Gemini is unavailable |
+| **AI-Assisted Planning** | Gemini 2.5 Flash generates itineraries, packing lists, and budget estimates with static curated fallback if Gemini is unavailable |
 | **Self-Hosted Search** | PostgreSQL `tsvector` + GIN index for city full-text search — no Algolia, no paid search API |
 | **Leaflet + OpenStreetMap** | Fully free map with animated polyline route drawing — no Google Maps billing account required |
 | **Zero-Auth Public Share** | Public itinerary URL (`/trip/:slug`) readable without login — one click to copy and share |
@@ -74,7 +74,7 @@ Traveloop solves this in one platform:
 | 4 | Itinerary Builder — Stops, drag-to-reorder, date validation | Core planning loop |
 | 5 | City Search — PostgreSQL full-text, self-hosted data | Zero API dependency |
 | 6 | Activity Search — Profile-filtered, own DB | Personalized discovery |
-| 7 | AI Itinerary Generator (Gemini 1.5 Flash + curated fallback) | WOW factor #1 |
+| 7 | AI Itinerary Generator (Gemini 2.5 Flash + curated fallback) | WOW factor #1 |
 | 8 | Budget & Cost Breakdown — Day-level alerts, Chart.js | WOW factor #2 |
 | 9 | Live Map with Route Drawing (Leaflet + OpenStreetMap) | WOW factor #3 |
 | 10 | Packing Checklist — AI-seeded by profile + destination season | Practical utility |
@@ -208,7 +208,7 @@ HEAD
 | Validation | Zod | Schema-first, TypeScript-native, shared between frontend and backend |
 | Database | PostgreSQL 16 | Relational, 3NF schema, `tsvector` full-text search, `CHECK` constraints |
 | Auth | JWT + bcrypt + HttpOnly cookie | No vendor lock-in, custom auth, HttpOnly prevents XSS token theft |
-| AI | Google Gemini 1.5 Flash | Free: 15 req/min, 1M tokens/day — sufficient for demo and MVP |
+| AI | Google Gemini 2.5 Flash | Free: 15 req/min, 1M tokens/day — sufficient for demo and MVP |
 | Media | Cloudinary Free | Browser-direct upload, 25 GB storage, signed uploads from backend |
 | Email | Resend.com | 3,000 emails/month free, modern API, OTP and welcome email delivery |
 | Destination Data | Wikipedia, Unsplash, OpenTripMap, OpenWeather, GeoDB Cities | External enrichment stays server-side, cached/stored in Traveloop DB |

@@ -116,7 +116,10 @@ export default function CityDetailPage() {
       body: chatDraft.trim(),
     }),
     onSuccess: (message) => {
-      queryClient.setQueryData(placeChatKey, (current = []) => [...current, message]);
+      queryClient.setQueryData(placeChatKey, (current) => {
+        const prev = current?.messages ?? [];
+        return { ...current, messages: [...prev, message] };
+      });
       setChatDraft("");
     },
   });
@@ -347,27 +350,35 @@ export default function CityDetailPage() {
             <div className={`info-card place-chat-card${isChatOpen ? " open" : ""}`}>
               <button className="place-chat-toggle" type="button" onClick={() => setIsChatOpen((open) => !open)}>
                 <span><MessageCircle size={18} /> {cityName} Traveler Chat</span>
-                <span className="place-chat-count">{user ? `${(placeChatQuery.data || []).length || 3} chats` : "Login"}</span>
+                <span className="place-chat-count">{`${(placeChatQuery.data?.messages ?? []).length || 3} chats`}</span>
               </button>
               {isChatOpen && (
                 <div className="place-chat-dropdown">
                   <p className="place-chat-note">Chat with travelers interested in this place. Traveloop shows generated aliases only.</p>
+                  <div className="place-chat-messages">
+                    {placeChatQuery.isLoading && <div className="place-chat-empty">Loading messages...</div>}
+                    {!placeChatQuery.isLoading && (placeChatQuery.data?.messages ?? []).length === 0 && (
+                      <div className="place-chat-empty">No messages yet. Start the conversation!</div>
+                    )}
+                    {(placeChatQuery.data?.messages ?? []).map((message) => (
+                      <div key={message.id} className={`place-chat-message${message.isOwn ? " own" : ""}${message.isSystem ? " starter" : ""}`}>
+                        <div className="place-chat-meta">
+                          <span>{message.authorAlias}</span>
+                          <time>{new Date(message.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</time>
+                        </div>
+                        <p>{message.body}</p>
+                      </div>
+                    ))}
+                  </div>
                   {!user ? (
-                    <Link to={ROUTES.login} className="btn btn-secondary btn-sm">Log in to chat</Link>
+                    <>
+                      <p className="place-chat-note" style={{ marginTop: "1rem" }}>
+                        Log in to add your own message, or browse existing traveler chat.
+                      </p>
+                      <Link to={ROUTES.login} className="btn btn-secondary btn-sm">Log in to chat</Link>
+                    </>
                   ) : (
                     <>
-                      <div className="place-chat-messages">
-                        {placeChatQuery.isLoading && <div className="place-chat-empty">Loading messages...</div>}
-                        {(placeChatQuery.data || []).map((message) => (
-                          <div key={message.id} className={`place-chat-message${message.isOwn ? " own" : ""}${message.isSystem ? " starter" : ""}`}>
-                            <div className="place-chat-meta">
-                              <span>{message.authorAlias}</span>
-                              <time>{new Date(message.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</time>
-                            </div>
-                            <p>{message.body}</p>
-                          </div>
-                        ))}
-                      </div>
                       <form
                         className="place-chat-form"
                         onSubmit={(event) => {
