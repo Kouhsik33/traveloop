@@ -12,7 +12,7 @@ import { getDestinationData } from "@/lib/destinationData";
 import { buildFallbackTransportRoutes } from "@/lib/transportFallback";
 import { usd } from "@/lib/format";
 import { useAuthStore } from "@/store/authStore";
-import { Bus, MapPin, Plane, Thermometer, Info, ShieldAlert, Navigation, Star, Palmtree, Train, Utensils, IndianRupee, MessageCircle, Send } from "lucide-react";
+import { Bus, MapPin, Plane, Thermometer, Info, ShieldAlert, Navigation, Star, Palmtree, Train, Utensils, IndianRupee, MessageCircle, Send, Sun, Snowflake, ArrowLeft } from "lucide-react";
 import "@/styles/components/ui.css";
 import "@/styles/components/destination.css";
 
@@ -181,7 +181,7 @@ export default function CityDetailPage() {
         />
         <div className="destination-hero-overlay" />
         <div className="destination-hero-content">
-          <Link to={ROUTES.cities} className="destination-back">← All Destinations</Link>
+          <Link to={ROUTES.cities} className="destination-back"><ArrowLeft size={16} /> All Destinations</Link>
           <div className="destination-hero-meta">
             <span className="badge badge-glass"><MapPin size={14} /> {city?.state || "India"}</span>
             {city?.isRegionalGem && <span className="badge badge-glass-accent"><Star size={14} /> Regional Gem</span>}
@@ -243,72 +243,7 @@ export default function CityDetailPage() {
                 </div>
               )}
             </div>
-
-            {/* Transport Routes */}
-            <section className="destination-section">
-              <div className="section-header-row">
-                <h2 className="section-title"><Navigation size={20} className="section-icon" /> Getting There</h2>
-                <div className="transport-tabs">
-                  {["all", "flight", "train", "bus"].map((mode) => (
-                    <button 
-                      key={mode} 
-                      className={`transport-tab ${transportMode === mode ? "active" : ""}`}
-                      onClick={() => setTransportMode(mode)}
-                    >
-                      {mode.charAt(0).toUpperCase() + mode.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              {transportRoutes.length > 0 ? (
-                <div className="transport-list">
-                  {transportRoutes.map((route) => (
-                    <div key={route.id} className="transport-card">
-                      <div className="transport-provider">
-                        <div className="provider-logo provider-logo-icon">
-                          {(() => {
-                            const Icon = transportIcons[route.mode] || Navigation;
-                            return <Icon size={22} />;
-                          })()}
-                        </div>
-                        <div className="provider-details">
-                          <span className="provider-name">{route.provider}</span>
-                          <span className="provider-type">{route.type}{route.isSampleData ? " · indicative" : ""}</span>
-                        </div>
-                      </div>
-                      <div className="transport-times">
-                        <div className="time-block">
-                          <span className="time">{route.departureTime}</span>
-                          <span className="city">{route.from}</span>
-                        </div>
-                        <div className="time-duration">
-                          <span className="duration-line"></span>
-                          <span className="duration-text">{route.duration}</span>
-                        </div>
-                        <div className="time-block right">
-                          <span className="time">{route.arrivalTime}</span>
-                          <span className="city">{route.to}</span>
-                        </div>
-                      </div>
-                      <div className="transport-price-action">
-                        <span className="price">INR {route.price.toLocaleString("en-IN")}</span>
-                        <button className="btn btn-primary btn-sm">Book</button>
-                      </div>
-                      {route.routeSummary && <div className="transport-route-note">{route.routeSummary}</div>}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="empty-state minimal">
-                  <p>No {transportMode !== 'all' ? transportMode : ''} routes available for this search criteria.</p>
-                </div>
-              )}
-            </section>
-
           </div>
-
-          {/* ── Sidebar ─────────────────────────────────────── */}
           <div className="destination-sidebar">
             {/* Quick Info Card */}
             <div className="info-card quick-facts">
@@ -331,14 +266,14 @@ export default function CityDetailPage() {
               </div>
 
               {(liveWeather || destData?.weather) && (
-                <div className="weather-mini">
+                  <div className="weather-mini">
                   <div className="weather-item">
-                    <span>☀️ Summer</span>
-                    <span>{liveWeather?.summary || destData?.weather?.summer}</span>
+                    <span className="weather-label"><Sun size={14} /> Summer</span>
+                    <span className="weather-value">{liveWeather?.summary || destData?.weather?.summer}</span>
                   </div>
                   <div className="weather-item">
-                    <span>❄️ Winter</span>
-                    <span>{liveWeather?.avgTempC ? `${liveWeather.avgTempC} C` : destData?.weather?.winter}</span>
+                    <span className="weather-label"><Snowflake size={14} /> Winter</span>
+                    <span className="weather-value">{liveWeather?.avgTempC ? `${liveWeather.avgTempC} C` : destData?.weather?.winter}</span>
                   </div>
                 </div>
               )}
@@ -426,6 +361,68 @@ export default function CityDetailPage() {
             )}
           </div>
         </div>
+
+        {/* ── Transport Routes (Full Width) ────────────────── */}
+        <section className="destination-section" style={{ marginTop: "var(--sp-2xl)" }}>
+          <div className="section-header-row">
+            <h2 className="section-title"><Navigation size={20} className="section-icon" /> Getting There</h2>
+            <div className="transport-tabs">
+              {["all", "flight", "train", "bus"].map((mode) => (
+                <button 
+                  key={mode} 
+                  className={`transport-tab ${transportMode === mode ? "active" : ""}`}
+                  onClick={() => setTransportMode(mode)}
+                >
+                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {transportRoutes.length > 0 ? (
+            <div className="transport-list">
+              {transportRoutes.map((route) => (
+                <div key={route.id} className="transport-card">
+                  <div className="transport-provider">
+                    <div className="provider-logo provider-logo-icon">
+                      {(() => {
+                        const Icon = transportIcons[route.mode] || Navigation;
+                        return <Icon size={22} />;
+                      })()}
+                    </div>
+                    <div className="provider-details">
+                      <span className="provider-name">{route.provider}</span>
+                      <span className="provider-type">{route.type}{route.isSampleData ? " · indicative" : ""}</span>
+                    </div>
+                  </div>
+                  <div className="transport-times">
+                    <div className="time-block">
+                      <span className="time">{route.departureTime}</span>
+                      <span className="city">{route.from}</span>
+                    </div>
+                    <div className="time-duration">
+                      <span className="duration-line"></span>
+                      <span className="duration-text">{route.duration}</span>
+                    </div>
+                    <div className="time-block right">
+                      <span className="time">{route.arrivalTime}</span>
+                      <span className="city">{route.to}</span>
+                    </div>
+                  </div>
+                  <div className="transport-price-action">
+                    <span className="price">INR {route.price.toLocaleString("en-IN")}</span>
+                    <button className="btn btn-primary btn-sm">Book</button>
+                  </div>
+                  {route.routeSummary && <div className="transport-route-note">{route.routeSummary}</div>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state minimal">
+              <p>No {transportMode !== 'all' ? transportMode : ''} routes available for this search criteria.</p>
+            </div>
+          )}
+        </section>
 
         {/* ── Activities Grid ─────────────────────────────── */}
         {city?.activities && city.activities.length > 0 && (

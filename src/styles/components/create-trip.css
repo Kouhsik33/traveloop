@@ -1,0 +1,161 @@
+/* ── Create Trip — Extreme Level UI ───────────────────────── */
+.create-trip-root {
+  min-height: calc(100vh - 5rem);
+  display: grid;
+  place-items: center;
+  padding: var(--sp-3xl) var(--sp-lg);
+  background: var(--cl-bg);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle background glows */
+.create-trip-root::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: -5%;
+  width: 40rem;
+  height: 40rem;
+  background: radial-gradient(circle, var(--cl-accent-light) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(60px);
+  opacity: 0.5;
+}
+
+.create-trip-form-card {
+  width: 70%;
+  min-width: 32rem;
+  background: var(--cl-surface);
+  border: 1px solid var(--cl-border-strong);
+  border-radius: var(--br-2xl);
+  padding: var(--sp-3xl);
+  box-shadow: var(--shadow-xl);
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(10px);
+  animation: tripEntry 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes tripEntry {
+  from { opacity: 0; transform: translateY(30px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.create-trip-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
+  color: var(--cl-text-on-surface);
+  margin-bottom: var(--sp-xs);
+  letter-spacing: var(--ls-tight);
+  text-transform: uppercase;
+}
+
+.create-trip-sub {
+  font-size: var(--fs-sm);
+  color: var(--cl-text-muted);
+  margin-bottom: var(--sp-2xl);
+  line-height: 1.5;
+}
+
+.create-trip-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xl);
+}
+
+.create-trip-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-lg);
+}
+
+/* Refined Inputs for the Form */
+.create-trip-fields .input-wrap .input {
+  background-color: var(--cl-surface-2);
+  border: 1px solid var(--cl-border-surface);
+  color: var(--cl-text-on-surface);
+  padding: var(--sp-md) var(--sp-lg);
+  border-radius: var(--br-xl);
+  font-size: var(--fs-sm);
+  transition: all 0.3s ease;
+}
+
+.create-trip-fields .input-wrap .input:focus {
+  border-color: var(--cl-accent);
+  background-color: var(--cl-surface-elevated);
+  box-shadow: 0 0 0 4px var(--cl-accent-light);
+  transform: translateY(-1px);
+}
+
+.create-trip-fields .input-label {
+  color: var(--cl-text-muted);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+/* Custom styles for the submit button area */
+.create-trip-actions {
+  display: flex;
+  gap: var(--sp-md);
+  margin-top: var(--sp-xl);
+  padding-top: var(--sp-xl);
+  border-top: 1px solid var(--cl-border-surface);
+}
+
+.create-trip-btn-primary {
+  flex: 2;
+  height: 3.5rem;
+  font-size: var(--fs-md);
+  border-radius: var(--br-xl);
+  background: var(--cl-accent);
+  color: white;
+  border: none;
+  font-weight: var(--fw-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-sm);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-accent);
+}
+
+.create-trip-btn-primary:hover:not(:disabled) {
+  background: var(--cl-accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 78, 0, 0.4);
+}
+
+.create-trip-btn-secondary {
+  flex: 1;
+  height: 3.5rem;
+  font-size: var(--fs-sm);
+  border-radius: var(--br-xl);
+  background: var(--cl-surface-2);
+  color: var(--cl-text-on-surface);
+  border: 1px solid var(--cl-border-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-weight: var(--fw-semibold);
+  transition: all 0.2s ease;
+}
+
+.create-trip-btn-secondary:hover {
+  background: var(--cl-surface-elevated);
+  border-color: var(--cl-text-muted);
+}
+
+@media (max-width: 600px) {
+  .create-trip-row {
+    grid-template-columns: 1fr;
+  }
+  .create-trip-form-card {
+    padding: var(--sp-xl);
+  }
+}
