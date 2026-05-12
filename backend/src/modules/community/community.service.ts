@@ -278,7 +278,23 @@ export class CommunityService {
           LIMIT ${limit}
         `;
 
-    return rows.reverse().map((message) => mapPlaceMessage(message, viewerId));
+    let results = rows.reverse().map((message) => mapPlaceMessage(message, viewerId));
+
+    // If no messages found, provide some fresh on-the-fly starters for UI vibrancy
+    if (results.length === 0) {
+      results = starterMessages(destination || 'this place').map((s, i) => ({
+        id: `starter-${i}`,
+        cityId: query.cityId || null,
+        destinationName: destination,
+        body: s.body,
+        createdAt: new Date(Date.now() - (3 - i) * 10 * 60000).toISOString(),
+        authorAlias: s.alias,
+        isOwn: false,
+        isSystem: true
+      }));
+    }
+
+    return { messages: results, total: results.length };
   }
 
   public async sendPlaceMessage(userId: string, dto: SendPlaceChatMessageDto) {
@@ -312,12 +328,12 @@ export class CommunityService {
       ? await prisma.$queryRaw<Array<{ count: bigint }>>`
           SELECT COUNT(*)::bigint AS count
           FROM community_place_messages
-          WHERE city_id = ${cityId}::uuid
+          WHERE city_id = ${cityId}::uuid AND is_system = TRUE
         `
       : await prisma.$queryRaw<Array<{ count: bigint }>>`
           SELECT COUNT(*)::bigint AS count
           FROM community_place_messages
-          WHERE lower(destination_name) = lower(${normalizedDestination})
+          WHERE lower(destination_name) = lower(${normalizedDestination}) AND is_system = TRUE
         `;
     if (Number(existing[0]?.count ?? 0) > 0) return;
 

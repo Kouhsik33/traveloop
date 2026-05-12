@@ -8,6 +8,7 @@ import { useAuthStore } from "@/store/authStore";
 import { SkeletonCard, SkeletonText } from "@/components/shared/Skeleton";
 import { SmartImage } from "@/components/shared/SmartImage";
 import { useToast } from "@/components/shared/toast-context";
+import CommunityChatWidget from "@/components/shared/CommunityChatWidget";
 import "@/styles/components/community.css";
 import "@/styles/components/ui.css";
 
@@ -370,6 +371,9 @@ export default function CommunityTabPage() {
           </div>
         )}
       </main>
+
+      {/* TravelBot — floating community chat widget */}
+      <CommunityChatWidget />
     </div>
   );
 }
