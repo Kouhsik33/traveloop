@@ -85,11 +85,11 @@ export default function LandingPage() {
             >
               {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>
-            <Link to={ROUTES.login}  className="btn btn-ghost btn-sm" style={{ color: "rgba(17, 24, 39, 0.75)" }}>
+            <Link to={ROUTES.login} className="btn btn-ghost btn-sm" style={{ color: "rgba(17, 24, 39, 0.75)" }}>
               Sign In
             </Link>
-            <Link to={ROUTES.login} className="btn btn-primary btn-sm">
-              Sign In →
+            <Link to={ROUTES.signup} className="btn btn-primary btn-sm">
+              Sign Up →
             </Link>
           </div>
         </div>
@@ -229,7 +229,7 @@ export default function LandingPage() {
             </p>
             <div className="cta-actions">
               <Link
-                to={ROUTES.login}
+                to={ROUTES.signup}
                 className="btn btn-lg"
                 style={{
                   background: "#fff",
@@ -238,7 +238,7 @@ export default function LandingPage() {
                   boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
                 }}
               >
-                Sign In & Plan →
+                Get Started →
               </Link>
               <Link
                 to={ROUTES.login}

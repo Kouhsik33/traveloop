@@ -252,18 +252,21 @@
 
 /* Navbar in hero */
 .landing-navbar {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: var(--z-navbar, 100);
+  z-index: var(--z-navbar, 1000);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--sp-lg) var(--sp-2xl);
-  max-width: var(--max-w-2xl);
-  margin-inline: auto;
+  padding: var(--sp-md) var(--sp-2xl);
   width: 100%;
+  background: rgba(244, 241, 222, 0.8);
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(px);
+  border-bottom: 1px solid rgba(17, 24, 39, 0.05);
+  transition: all var(--tr-base);
 }
 
 /* Transparent navbar for hero overlay */
@@ -561,7 +564,7 @@
 /* ── Feature Cards ────────────────────────────────────────── */
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--sp-lg);
 }
 
