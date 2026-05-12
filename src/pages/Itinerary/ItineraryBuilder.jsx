@@ -10,7 +10,11 @@ import { getApiErrorMessage } from "@/api/client";
 import { QUERY_KEYS, ROUTES } from "@/lib/constants";
 import { formatDate, getCityLabel, getStopCity, usd } from "@/lib/format";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useGeolocation } from "@/hooks/useGeolocation";
 import { useMap } from "@/hooks/useMap";
+import { buildAiContext } from "@/lib/aiContext";
+import { useAuthStore } from "@/store/authStore";
+import { updateProfile } from "@/api/auth.api";
 import { MapView } from "@/components/itinerary/MapView";
 import { useToast } from "@/components/shared/toast-context";
 import "@/styles/components/itinerary.css";
@@ -21,6 +25,8 @@ export default function ItineraryBuilderPage() {
   const { id } = useParams();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const user = useAuthStore((s) => s.user);
+  const { requestLocation, isLocating } = useGeolocation();
   const [cityQuery, setCityQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState(null);
   const [activityQuery, setActivityQuery] = useState("");
@@ -89,12 +95,32 @@ export default function ItineraryBuilderPage() {
   });
 
   const aiMutation = useMutation({
-    mutationFn: () => generateItinerary({
-      prompt: `${trip?.title || "Trip"} ${stops.map((stop) => getCityLabel(getStopCity(stop))).join(", ")}`,
-      days: Math.max(1, stops.length || 3),
-      vibe: trip?.vibe || "comfort",
-      tripType: trip?.tripType || "solo",
-    }),
+    mutationFn: async () => {
+      const coords = await requestLocation();
+      if (!coords) {
+        showToast("Location access denied. AI will generate without nearby recommendations.", "info");
+      } else {
+        await updateProfile({
+          travelPreferences: {
+            ...(user?.travelPreferences || {}),
+            currentLocation: coords,
+            locationCapturedAt: new Date().toISOString(),
+          },
+        }).catch(() => {});
+      }
+      return generateItinerary({
+        prompt: `${trip?.title || "Trip"} ${stops.map((stop) => getCityLabel(getStopCity(stop))).join(", ")}`,
+        days: Math.max(1, stops.length || 3),
+        vibe: trip?.vibe || "comfort",
+        tripType: trip?.tripType || "solo",
+        userContext: buildAiContext(user, {
+          currentLocation: coords || undefined,
+          interests: [trip?.vibe || "comfort"],
+          previousTrips: stops.map((stop) => getCityLabel(getStopCity(stop))).filter(Boolean),
+          groupSize: trip?.tripType === "group" ? 4 : 1,
+        }),
+      });
+    },
     onError: (err) => showToast(getApiErrorMessage(err), "error"),
   });
 
@@ -113,7 +139,7 @@ export default function ItineraryBuilderPage() {
           <h1 className="itinerary-title">{trip?.title || "Itinerary Builder"}</h1>
           <Link to={ROUTES.tripItineraryView(id)} className="btn btn-secondary btn-sm">View itinerary</Link>
         </div>
-        <button className="btn btn-primary" disabled={aiMutation.isPending} onClick={() => aiMutation.mutate()}><Sparkles size={16} /> AI Ideas</button>
+        <button className="btn btn-primary" disabled={aiMutation.isPending || isLocating} onClick={() => aiMutation.mutate()}><Sparkles size={16} /> {isLocating ? "Locating..." : "AI Ideas"}</button>
       </div>
 
       <MapView stops={stops} routeData={routeData} height="320px" />

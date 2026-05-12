@@ -1,5 +1,34 @@
 import { z } from 'zod';
 
+const locationContextDto = z
+  .object({
+    latitude: z.number().min(-90).max(90),
+    longitude: z.number().min(-180).max(180),
+    city: z.string().max(80).optional(),
+    country: z.string().max(80).optional()
+  })
+  .strict();
+
+const aiUserContextDto = z
+  .object({
+    travelStyle: z.array(z.string().max(40)).max(12).optional(),
+    interests: z.array(z.string().max(50)).max(20).optional(),
+    budget: z
+      .object({
+        min: z.number().nonnegative().optional(),
+        max: z.number().nonnegative().optional(),
+        currency: z.string().max(10).optional()
+      })
+      .strict()
+      .optional(),
+    foodPreference: z.string().max(80).optional(),
+    climatePreference: z.string().max(80).optional(),
+    previousTrips: z.array(z.string().max(120)).max(10).optional(),
+    groupSize: z.number().int().positive().max(30).optional(),
+    currentLocation: locationContextDto.optional()
+  })
+  .strict();
+
 export const itineraryDto = z
   .object({
     prompt: z.string().min(1).max(2000),
@@ -15,7 +44,7 @@ export const itineraryDto = z
       'honeymoon',
       'business'
     ]),
-    userContext: z.string().max(1000).optional()
+    userContext: aiUserContextDto.optional()
   })
   .strict();
 
@@ -25,7 +54,7 @@ export const packingSuggestionDto = z
     days: z.number().int().positive().max(60),
     tripType: z.string().min(1).max(50),
     season: z.string().max(100).optional(),
-    userContext: z.string().max(1000).optional()
+    userContext: aiUserContextDto.optional()
   })
   .strict();
 
@@ -36,7 +65,7 @@ export const budgetEstimateDto = z
     vibe: z.enum(['backpacker', 'comfort', 'luxury']).default('comfort'),
     tripType: z.string().max(50).optional(),
     days: z.number().int().positive().max(60).optional(),
-    userContext: z.string().max(1000).optional()
+    userContext: aiUserContextDto.optional()
   })
   .strict();
 

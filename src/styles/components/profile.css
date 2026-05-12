@@ -117,6 +117,7 @@
 
 @media (max-width: 900px) {
   .profile-grid { grid-template-columns: 1fr; }
+  .profile-verify-grid { grid-template-columns: 1fr; }
 }
 
 .profile-form-card {
@@ -185,6 +186,95 @@
   height: 1px;
   background: var(--cl-border);
   margin: var(--sp-lg) 0;
+}
+
+.profile-readonly-contact {
+  min-height: 2.75rem;
+  border: 1px solid var(--cl-border);
+  border-radius: var(--br-md);
+  background: var(--cl-bg-alt);
+  color: var(--cl-text);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  padding: 0 var(--sp-md);
+  flex-wrap: wrap;
+}
+
+.profile-verify-pill {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid var(--cl-border);
+  border-radius: var(--br-full);
+  color: var(--cl-text-muted);
+  background: var(--cl-bg);
+  padding: 0.25rem 0.55rem;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+}
+
+.profile-verify-pill.verified {
+  border-color: rgba(46, 125, 50, 0.25);
+  color: #2e7d32;
+  background: rgba(46, 125, 50, 0.08);
+}
+
+.profile-inline-pill {
+  align-self: flex-start;
+  margin-left: 0;
+  margin-top: 0.35rem;
+}
+
+.profile-verify-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-md);
+}
+
+.profile-verify-box {
+  border: 1px solid var(--cl-border);
+  border-radius: var(--br-lg);
+  padding: var(--sp-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
+}
+
+.profile-verify-heading,
+.profile-action-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+}
+
+.profile-verify-heading {
+  font-weight: var(--fw-bold);
+  color: var(--cl-text);
+}
+
+.profile-action-row {
+  flex-wrap: wrap;
+}
+
+.profile-ai-help-card {
+  border: 1px solid rgba(129, 178, 154, 0.35);
+  border-radius: var(--br-xl);
+  background: rgba(129, 178, 154, 0.08);
+  padding: var(--sp-md);
+}
+
+.profile-ai-help-card ol {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--cl-text-muted);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-body);
+}
+
+.profile-ai-help-card li + li {
+  margin-top: 0.45rem;
 }
 
 /* Trips sidebar */

@@ -1,7 +1,14 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { updateProfile } from "@/api/auth.api";
+import {
+  deleteAccount,
+  logout,
+  requestDeleteAccountOtp,
+  requestProfileVerificationOtp,
+  updateProfile,
+  verifyProfileOtp,
+} from "@/api/auth.api";
 import { getApiErrorMessage } from "@/api/client";
 import { signUpload } from "@/api/media.api";
 import { listTrips } from "@/api/trips.api";
@@ -11,9 +18,10 @@ import { QUERY_KEYS, ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/shared/toast-context";
 import { Avatar } from "@/components/shared/Avatar";
+import { Modal } from "@/components/ui/Modal";
 import "@/styles/components/profile.css";
 import "@/styles/components/ui.css";
-import { Camera, Eye, EyeOff, KeyRound, Map, Save, Sparkles } from "lucide-react";
+import { AlertTriangle, Bot, Camera, CheckCircle2, Eye, EyeOff, KeyRound, Mail, Map, MessageCircle, Phone, Save, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
 
 const styleOptions = ["heritage", "food", "nature", "adventure", "luxury", "budget", "workation", "pilgrimage"];
 
@@ -49,11 +57,22 @@ async function uploadProfilePhoto(file) {
 }
 
 export default function UserProfilePage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
   const [showKey, setShowKey] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteOtp, setDeleteOtp] = useState("");
+  const [otpRequested, setOtpRequested] = useState(false);
+  const [verification, setVerification] = useState({
+    emailOtp: "",
+    phoneOtp: "",
+    emailRequested: false,
+    phoneRequested: false,
+    phoneChannel: "sms",
+  });
   const [gemini, setGemini] = useState(getGeminiSettings);
   const [form, setForm] = useState(() => ({
     name: user?.name || "",
@@ -119,6 +138,65 @@ export default function UserProfilePage() {
     onError: (err) => showToast(getApiErrorMessage(err), "error"),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteAccount(deleteOtp),
+    onSuccess: async () => {
+      await logout().catch(() => {});
+      useAuthStore.getState().logout();
+      showToast("Your account has been deleted.", "success");
+      navigate("/login", { replace: true });
+    },
+    onError: (err) => showToast(getApiErrorMessage(err), "error"),
+  });
+
+  const requestOtpMutation = useMutation({
+    mutationFn: requestDeleteAccountOtp,
+    onMutate: () => {
+      setOtpRequested(true);
+    },
+    onSuccess: () => {
+      setOtpRequested(true);
+      showToast("OTP sent to your registered email. Phone channels are used when available.", "success");
+    },
+    onError: (err) => showToast(getApiErrorMessage(err), "error"),
+  });
+
+  const requestVerificationMutation = useMutation({
+    mutationFn: requestProfileVerificationOtp,
+    onMutate: ({ target }) => {
+      setVerification((value) => ({
+        ...value,
+        emailRequested: target === "email" ? true : value.emailRequested,
+        phoneRequested: target === "phone" ? true : value.phoneRequested,
+      }));
+    },
+    onSuccess: (_data, variables) => {
+      showToast(`${variables.target === "email" ? "Email" : "Phone"} OTP sent.`, "success");
+    },
+    onError: (err) => showToast(getApiErrorMessage(err), "error"),
+  });
+
+  const verifyMutation = useMutation({
+    mutationFn: verifyProfileOtp,
+    onSuccess: async (_data, variables) => {
+      const now = new Date().toISOString();
+      setUser({
+        ...useAuthStore.getState().user,
+        ...(variables.target === "email" ? { emailVerifiedAt: now } : { phoneVerifiedAt: now }),
+      });
+      setVerification((value) => ({
+        ...value,
+        emailOtp: variables.target === "email" ? "" : value.emailOtp,
+        phoneOtp: variables.target === "phone" ? "" : value.phoneOtp,
+        emailRequested: variables.target === "email" ? false : value.emailRequested,
+        phoneRequested: variables.target === "phone" ? false : value.phoneRequested,
+      }));
+      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+      showToast(`${variables.target === "email" ? "Email" : "Phone"} verified.`, "success");
+    },
+    onError: (err) => showToast(getApiErrorMessage(err), "error"),
+  });
+
   const selectedStyles = useMemo(() => new Set(form.travelStyles), [form.travelStyles]);
   const toggleStyle = (style) => setForm((value) => ({
     ...value,
@@ -164,13 +242,31 @@ export default function UserProfilePage() {
       <div className="profile-grid">
         <form className="profile-form-card" onSubmit={save}>
           <h2 className="profile-form-section-title">Profile Settings</h2>
+          <label className="input-wrap">
+            <span className="input-label">Email</span>
+            <div className="profile-readonly-contact">
+              <Mail size={16} />
+              <span>{user?.email || "No email"}</span>
+              <span className={`profile-verify-pill ${user?.emailVerifiedAt ? "verified" : ""}`}>
+                {user?.emailVerifiedAt ? <CheckCircle2 size={14} /> : <ShieldCheck size={14} />}
+                {user?.emailVerifiedAt ? "Verified" : "Not verified"}
+              </span>
+            </div>
+          </label>
           <div className="profile-form-row">
             <label className="input-wrap"><span className="input-label">Name</span><input className="input" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} /></label>
             <label className="input-wrap"><span className="input-label">Username</span><input className="input" value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} placeholder="traveller_01" /></label>
           </div>
           <label className="input-wrap"><span className="input-label">Bio</span><textarea className="input" rows={4} value={form.bio} onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))} placeholder="Tell Traveloop what kind of journeys you love." /></label>
           <div className="profile-form-row">
-            <label className="input-wrap"><span className="input-label">Phone</span><input className="input" value={form.phoneNumber} onChange={(e) => setForm((f) => ({ ...f, phoneNumber: e.target.value }))} /></label>
+            <label className="input-wrap">
+              <span className="input-label">Phone</span>
+              <input className="input" value={form.phoneNumber} onChange={(e) => setForm((f) => ({ ...f, phoneNumber: e.target.value }))} />
+              <span className={`profile-verify-pill profile-inline-pill ${user?.phoneVerifiedAt ? "verified" : ""}`}>
+                {user?.phoneVerifiedAt ? <CheckCircle2 size={14} /> : <ShieldCheck size={14} />}
+                {user?.phoneVerifiedAt ? "Verified" : "Not verified"}
+              </span>
+            </label>
             <label className="input-wrap"><span className="input-label">Traveller Type</span><select className="input" value={form.travelerProfile} onChange={(e) => setForm((f) => ({ ...f, travelerProfile: e.target.value }))}><option value="solo">Solo</option><option value="couple">Couple</option><option value="family">Family</option><option value="group">Group</option><option value="senior">Senior</option></select></label>
           </div>
           <div className="profile-form-row">
@@ -179,6 +275,85 @@ export default function UserProfilePage() {
           </div>
           <div className="style-chip-grid">{styleOptions.map((style) => <button key={style} type="button" className={`style-chip${selectedStyles.has(style) ? " active" : ""}`} onClick={() => toggleStyle(style)}>{style}</button>)}</div>
           <button className="btn btn-primary" disabled={saveMutation.isPending}><Save size={16} /> Save Profile</button>
+
+          <div className="profile-form-divider" />
+          <h2 className="profile-form-section-title">Verify Email & Phone</h2>
+          <div className="profile-verify-grid">
+            <div className="profile-verify-box">
+              <div className="profile-verify-heading"><Mail size={16} /> Email OTP</div>
+              <p className="profile-help">Your login email is fixed for this account and can be verified here.</p>
+              {verification.emailRequested && (
+                <input
+                  className="input"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={verification.emailOtp}
+                  onChange={(e) => setVerification((value) => ({ ...value, emailOtp: e.target.value.replace(/\D/g, "") }))}
+                  placeholder="Enter email OTP"
+                />
+              )}
+              <div className="profile-action-row">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  disabled={requestVerificationMutation.isPending}
+                  onClick={() => requestVerificationMutation.mutate({ target: "email" })}
+                >
+                  <Mail size={14} /> {verification.emailRequested ? "Resend" : "Send"} OTP
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={verifyMutation.isPending || verification.emailOtp.length !== 6}
+                  onClick={() => verifyMutation.mutate({ target: "email", otp: verification.emailOtp })}
+                >
+                  Verify
+                </button>
+              </div>
+            </div>
+            <div className="profile-verify-box">
+              <div className="profile-verify-heading"><Phone size={16} /> Phone OTP</div>
+              <p className="profile-help">Save your phone number first, then choose SMS or WhatsApp for the OTP.</p>
+              <select
+                className="input"
+                value={verification.phoneChannel}
+                onChange={(e) => setVerification((value) => ({ ...value, phoneChannel: e.target.value }))}
+              >
+                <option value="sms">SMS</option>
+                <option value="whatsapp">WhatsApp</option>
+              </select>
+              {verification.phoneRequested && (
+                <input
+                  className="input"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={verification.phoneOtp}
+                  onChange={(e) => setVerification((value) => ({ ...value, phoneOtp: e.target.value.replace(/\D/g, "") }))}
+                  placeholder="Enter phone OTP"
+                />
+              )}
+              <div className="profile-action-row">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  disabled={requestVerificationMutation.isPending || !form.phoneNumber}
+                  onClick={() => requestVerificationMutation.mutate({ target: "phone", channel: verification.phoneChannel })}
+                >
+                  <MessageCircle size={14} /> {verification.phoneRequested ? "Resend" : "Send"} OTP
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={verifyMutation.isPending || verification.phoneOtp.length !== 6}
+                  onClick={() => verifyMutation.mutate({ target: "phone", otp: verification.phoneOtp })}
+                >
+                  Verify
+                </button>
+              </div>
+            </div>
+          </div>
 
           <div className="profile-form-divider" />
           <h2 className="profile-form-section-title">Gemini API Key</h2>
@@ -196,8 +371,103 @@ export default function UserProfilePage() {
           <div className="profile-trips-panel-title"><Map size={18} /> Recent Trips</div>
           {trips.map((trip) => <Link key={trip.id} to={ROUTES.tripDetail(trip.id)} className="profile-trip-item"><div className="profile-trip-thumb"><Map size={24} /></div><div className="profile-trip-name">{trip.title}</div></Link>)}
           {trips.length === 0 && <div className="profile-help">No trips yet.</div>}
+
+          <div className="profile-form-divider" style={{ marginTop: "var(--sp-lg)" }} />
+          <div className="profile-ai-help-card">
+            <div className="profile-trips-panel-title"><Bot size={18} /> How AI Works</div>
+            <ol>
+              <li><strong>Profile:</strong> add and validate your Gemini key here to unlock backend AI endpoints.</li>
+              <li><strong>Itinerary:</strong> open a trip itinerary and click AI Ideas for context-aware stop and activity suggestions.</li>
+              <li><strong>Budget:</strong> click AI Estimate for realistic INR daily splits by stay, food, and activities.</li>
+              <li><strong>Packing:</strong> click Auto-generate List to inject categorized trip items into the checklist.</li>
+              <li><strong>Dashboard:</strong> use it as the entry hub for quick actions and AI planning links.</li>
+            </ol>
+          </div>
+
+          <div className="profile-form-divider" style={{ marginTop: "var(--sp-lg)" }} />
+          <div style={{ border: "1px solid rgba(231, 111, 81, 0.35)", borderRadius: "var(--br-xl)", padding: "var(--sp-md)", background: "rgba(231, 111, 81, 0.06)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-xs)", fontWeight: 700, marginBottom: "6px", color: "var(--cl-error)" }}>
+              <AlertTriangle size={16} /> Danger Zone
+            </div>
+            <p className="profile-help" style={{ marginBottom: "var(--sp-sm)" }}>
+              Delete your account permanently. This action cannot be undone.
+            </p>
+            <button
+              type="button"
+              className="btn"
+              style={{ background: "var(--cl-error)", color: "#fff" }}
+              onClick={() => {
+                setDeleteOtp("");
+                setOtpRequested(false);
+                setIsDeleteOpen(true);
+              }}
+            >
+              <Trash2 size={14} /> Delete Account
+            </button>
+          </div>
         </div>
       </div>
+
+      <Modal
+        open={isDeleteOpen}
+        title="Delete account"
+        onClose={() => {
+          if (deleteMutation.isPending) return;
+          setDeleteOtp("");
+          setOtpRequested(false);
+          setIsDeleteOpen(false);
+        }}
+        closeDisabled={deleteMutation.isPending}
+      >
+        <p style={{ marginTop: 0, color: "var(--cl-text-muted)" }}>
+          We will send a one-time OTP to your registered email. If a phone number is saved, Traveloop also tries SMS and WhatsApp.
+        </p>
+        {otpRequested && (
+          <label className="input-wrap">
+            <span className="input-label">OTP</span>
+            <input
+              className="input"
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              value={deleteOtp}
+              onChange={(e) => setDeleteOtp(e.target.value.replace(/\D/g, ""))}
+              placeholder="Enter 6-digit OTP"
+            />
+          </label>
+        )}
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--sp-sm)", marginTop: "var(--sp-md)" }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => {
+              setDeleteOtp("");
+              setOtpRequested(false);
+              setIsDeleteOpen(false);
+            }}
+            disabled={deleteMutation.isPending}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={requestOtpMutation.isPending}
+            onClick={() => requestOtpMutation.mutate()}
+          >
+            {requestOtpMutation.isPending ? "Sending OTP..." : otpRequested ? "Resend OTP" : "Send OTP"}
+          </button>
+          <button
+            type="button"
+            className="btn"
+            style={{ background: "var(--cl-error)", color: "#fff" }}
+            disabled={deleteMutation.isPending || deleteOtp.length !== 6}
+            onClick={() => deleteMutation.mutate()}
+          >
+            {deleteMutation.isPending ? "Deleting..." : "Delete Account"}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

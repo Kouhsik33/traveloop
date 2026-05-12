@@ -28,7 +28,9 @@ apiClient.interceptors.response.use((res)=>res, (err)=>{
             "/auth/register",
             "/auth/forgot-password",
             "/auth/reset-password",
-            "/auth/me"
+            "/auth/me",
+            "/users/delete-account",
+            "/users/profile-verification"
         ];
         const isPublicAuthRoute = publicAuthRoutes.some((path) => reqUrl.includes(path));
         useAuthStore.getState().logout();

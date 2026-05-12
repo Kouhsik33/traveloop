@@ -17,6 +17,7 @@ import { mediaRouter } from './modules/media/media.router';
 import { notificationsRouter } from './modules/notifications/notifications.router';
 import { publicRouter } from './modules/public/public.router';
 import { tripsRouter } from './modules/trips/trips.router';
+import { usersRouter } from './modules/users/users.router';
 import { globalErrorHandler, notFoundHandler } from './middleware/error-handler';
 import { originGuard } from './middleware/origin-guard.middleware';
 import { globalRateLimiter } from './middleware/rate-limiter';
@@ -35,6 +36,7 @@ apiRouter.use('/media', mediaRouter);
 apiRouter.use('/notifications', notificationsRouter);
 apiRouter.use('/docs', docsRouter);
 apiRouter.use('/public', publicRouter);
+apiRouter.use('/users', usersRouter);
 
 const developmentOrigins =
   env.NODE_ENV === 'production'
@@ -92,6 +94,7 @@ export const createApp = (): express.Express => {
     }
   });
   app.use('/api/v1', apiRouter);
+  app.use('/api', apiRouter);
 
   app.use(notFoundHandler);
   app.use(globalErrorHandler);

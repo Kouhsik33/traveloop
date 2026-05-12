@@ -5,7 +5,7 @@ import { aiService } from './ai.service';
 export class AiController {
   public itinerary = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const itinerary = await aiService.itinerary(req.body as ItineraryDto);
+      const itinerary = await aiService.itinerary(req.user?.id ?? '', req.body as ItineraryDto);
       res.status(200).json({ data: itinerary, meta: null });
     } catch (error) {
       next(error);
@@ -14,7 +14,7 @@ export class AiController {
 
   public packing = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const packing = await aiService.packing(req.body as PackingSuggestionDto);
+      const packing = await aiService.packing(req.user?.id ?? '', req.body as PackingSuggestionDto);
       res.status(200).json({ data: packing, meta: null });
     } catch (error) {
       next(error);
@@ -23,7 +23,7 @@ export class AiController {
 
   public budget = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const budget = await aiService.budget(req.body as BudgetEstimateDto);
+      const budget = await aiService.budget(req.user?.id ?? '', req.body as BudgetEstimateDto);
       res.status(200).json({ data: budget, meta: null });
     } catch (error) {
       next(error);

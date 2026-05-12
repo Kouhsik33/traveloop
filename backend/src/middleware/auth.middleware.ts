@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
+import { prisma } from '../config/prisma';
 import { AppError } from './error-handler';
 
 interface JwtPayload {
@@ -24,7 +25,7 @@ const isJwtPayload = (payload: string | jwt.JwtPayload): payload is JwtPayload &
   (payload.role === 'user' || payload.role === 'admin') &&
   typeof payload.isAdmin === 'boolean';
 
-export const authMiddleware = (req: Request, _res: Response, next: NextFunction): void => {
+export const authMiddleware = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
   const token = req.cookies?.token;
 
   if (typeof token !== 'string') {
@@ -36,6 +37,15 @@ export const authMiddleware = (req: Request, _res: Response, next: NextFunction)
     const payload = jwt.verify(token, env.JWT_SECRET);
     if (!isJwtPayload(payload)) {
       next(new AppError('Invalid authentication token', 'UNAUTHORIZED', 401));
+      return;
+    }
+
+    const activeUser = await prisma.user.findFirst({
+      where: { id: payload.sub, isDeleted: false, deletedAt: null },
+      select: { id: true }
+    });
+    if (!activeUser) {
+      next(new AppError('Authentication required', 'UNAUTHORIZED', 401));
       return;
     }
 

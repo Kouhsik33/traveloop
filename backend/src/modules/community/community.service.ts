@@ -14,7 +14,7 @@ const postInclude = {
   likes: { select: { id: true, userId: true } },
   bookmarks: { select: { id: true, userId: true } },
   comments: {
-    take: 3,
+    take: 20,
     orderBy: { createdAt: 'desc' as const },
     include: { user: { select: { id: true, name: true, avatarUrl: true } } }
   }
@@ -107,7 +107,11 @@ export class CommunityService {
     if (existing) {
       await prisma.communityLike.delete({ where: { id: existing.id } });
     } else {
-      await prisma.communityLike.create({ data: { postId, userId } });
+      try {
+        await prisma.communityLike.create({ data: { postId, userId } });
+      } catch {
+        // Handles race condition where duplicate like is created in parallel.
+      }
     }
     return this.getPost(postId, userId);
   }

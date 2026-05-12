@@ -14,7 +14,7 @@ authRouter.post(
   authController.register
 );
 authRouter.post('/login', authRateLimiter, validate({ body: loginDto }), authController.login);
-authRouter.post('/logout', authMiddleware, authController.logout);
+authRouter.post('/logout', authController.logout);
 authRouter.post(
   '/forgot-password',
   authRateLimiter,

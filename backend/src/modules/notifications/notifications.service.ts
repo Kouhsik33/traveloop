@@ -362,6 +362,66 @@ export class NotificationsService {
     });
   }
 
+  public async sendAccountDeletionOtpEmail(email: string, name: string, otp: string): Promise<void> {
+    const safeName = escapeHtml(name);
+    const safeOtp = escapeHtml(otp);
+    const html = emailLayout('Delete Account Verification — Traveloop', `
+      <h1 class="email-title">Confirm account deletion ⚠️</h1>
+      <p class="email-text">Hi ${safeName}, use this OTP to confirm deleting your Traveloop account.</p>
+      <div class="email-otp-box">${safeOtp}</div>
+      <div class="email-highlight">
+        <p class="email-text" style="margin:0;">This code expires in <strong>10 minutes</strong>. Never share this code.</p>
+      </div>
+      <p class="email-muted">If you didn't request this, ignore this message and keep your account safe.</p>
+    `);
+    await this.sendEmail({
+      to: email,
+      subject: 'Traveloop — Account Deletion OTP',
+      text: `Your Traveloop account deletion OTP is ${otp}. It expires in 10 minutes.`,
+      html
+    });
+  }
+
+  public async sendAccountDeletionOtpSms(phoneNumber: string, otp: string): Promise<void> {
+    await this.sendSms({
+      to: phoneNumber,
+      message: `Traveloop: Your account deletion OTP is ${otp}. Valid for 10 minutes.`
+    });
+  }
+
+  public async sendAccountDeletionOtpWhatsApp(phoneNumber: string, otp: string): Promise<void> {
+    await this.sendWhatsApp({
+      to: phoneNumber,
+      message: `Traveloop: Your account deletion OTP is ${otp}. Valid for 10 minutes.`
+    });
+  }
+
+  public async sendProfileEmailVerificationOtp(email: string, name: string, otp: string): Promise<void> {
+    const safeName = escapeHtml(name);
+    const safeOtp = escapeHtml(otp);
+    const html = emailLayout('Verify Email - Traveloop', `
+      <h1 class="email-title">Verify your email</h1>
+      <p class="email-text">Hi ${safeName}, use this OTP to verify your Traveloop email address.</p>
+      <div class="email-otp-box">${safeOtp}</div>
+      <p class="email-muted">This code expires in 10 minutes. If you did not request it, you can ignore this email.</p>
+    `);
+    await this.sendEmail({
+      to: email,
+      subject: 'Traveloop - Verify your email',
+      text: `Your Traveloop email verification OTP is ${otp}. It expires in 10 minutes.`,
+      html
+    });
+  }
+
+  public async sendProfilePhoneVerificationOtp(phoneNumber: string, otp: string, channel: 'sms' | 'whatsapp'): Promise<void> {
+    const message = `Traveloop: Your phone verification OTP is ${otp}. Valid for 10 minutes.`;
+    if (channel === 'whatsapp') {
+      await this.sendWhatsApp({ to: phoneNumber, message });
+      return;
+    }
+    await this.sendSms({ to: phoneNumber, message });
+  }
+
   /* ── Trip Shared Notification ─────────────────────────────── */
   public async sendTripSharedNotification(
     email: string,

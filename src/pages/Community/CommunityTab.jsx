@@ -2,19 +2,33 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, Flame, Globe, Heart, MapPin, MessageCircle, Rocket, Share2, Sparkles, Star } from "lucide-react";
 import { addCommunityComment, createCommunityPost, listCommunityFeed, toggleCommunityLike } from "@/api/community.api";
-import { QUERY_KEYS } from "@/lib/constants";
+import { QUERY_KEYS, ROUTES } from "@/lib/constants";
 import { COMMUNITY_POSTS } from "@/lib/communityData";
 import { useAuthStore } from "@/store/authStore";
 import { SkeletonCard, SkeletonText } from "@/components/shared/Skeleton";
 import { SmartImage } from "@/components/shared/SmartImage";
+import { useToast } from "@/components/shared/toast-context";
 import "@/styles/components/community.css";
 import "@/styles/components/ui.css";
 
 const trending = ["#KashmirDiaries", "#Backpacking", "#WeekendGetaways", "#HiddenGems", "#Traveloop", "#IncredibleIndia"];
+const summarizePost = (text) => {
+  if (!text) return "";
+  if (text.length < 220) return text;
+  const firstSentence = text.split(". ").slice(0, 2).join(". ");
+  return `${firstSentence.slice(0, 240)}...`;
+};
+const getTravelBadge = (post) => {
+  const likes = post.likesCount || 0;
+  if (likes >= 20) return "Trailblazer";
+  if (likes >= 10) return "Local Expert";
+  return "Explorer";
+};
 
 export default function CommunityTabPage() {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
   const [commentDrafts, setCommentDrafts] = useState({});
@@ -29,12 +43,38 @@ export default function CommunityTabPage() {
     staleTime: 10 * 60 * 1000,
   });
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.communityFeed(1) });
-  const createMutation = useMutation({ mutationFn: createCommunityPost, onSuccess: refresh });
-  const likeMutation = useMutation({ mutationFn: toggleCommunityLike, onSuccess: refresh });
+  const patchPost = (postId, updater) => {
+    queryClient.setQueryData(QUERY_KEYS.communityFeed(1), (current) => {
+      if (!current?.posts) return current;
+      return {
+        ...current,
+        posts: current.posts.map((post) => (post.id === postId ? updater(post) : post)),
+      };
+    });
+  };
+  const createMutation = useMutation({ mutationFn: createCommunityPost, onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.communityFeed(1) }) });
+  const likeMutation = useMutation({
+    mutationFn: toggleCommunityLike,
+    onMutate: async (postId) => {
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.communityFeed(1) });
+      const previous = queryClient.getQueryData(QUERY_KEYS.communityFeed(1));
+      patchPost(postId, (post) => ({
+        ...post,
+        isLiked: !post.isLiked,
+        likesCount: Math.max(0, (post.likesCount || 0) + (post.isLiked ? -1 : 1)),
+      }));
+      return { previous, postId };
+    },
+    onSuccess: (nextPost) => patchPost(nextPost.id, () => nextPost),
+    onError: (err, _postId, context) => {
+      if (context?.previous) queryClient.setQueryData(QUERY_KEYS.communityFeed(1), context.previous);
+      showToast(err?.message || "Unable to update like.", "error");
+    },
+  });
   const commentMutation = useMutation({
     mutationFn: ({ postId, body }) => addCommunityComment(postId, { body }),
-    onSuccess: refresh,
+    onSuccess: (nextPost) => patchPost(nextPost.id, () => nextPost),
+    onError: (err) => showToast(err?.message || "Unable to add comment.", "error"),
   });
 
   const feedPosts = useMemo(() => {
@@ -62,7 +102,7 @@ export default function CommunityTabPage() {
     createMutation.mutate({
       title: title.trim(),
       content: content.trim(),
-      destinationName: "India",
+      destinationName: title.split("in ").at(-1)?.trim()?.slice(0, 120) || "India",
       heroImageUrl: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1200&q=80",
     });
     setTitle("");
@@ -84,12 +124,15 @@ export default function CommunityTabPage() {
 
   const sharePost = async (post) => {
     const authorName = post.author?.name || post.author || "Traveller";
-    const text = `${authorName} on Traveloop: ${post.content || post.body}`;
+    const url = `${window.location.origin}${ROUTES.community}?post=${post.id}`;
+    const text = `${authorName} on Traveloop: ${post.content || post.body}\n${url}`;
     if (navigator.share) {
-      await navigator.share({ title: "Traveloop community post", text }).catch(() => {});
+      await navigator.share({ title: "Traveloop community post", text, url }).catch(() => {});
+      showToast("Shared successfully.", "success");
       return;
     }
-    await navigator.clipboard?.writeText(text).catch(() => {});
+    const copied = await navigator.clipboard?.writeText(text).then(() => true).catch(() => false);
+    showToast(copied ? "Share link copied to clipboard." : "Unable to share this post.", copied ? "success" : "error");
   };
 
   const activityStats = [
@@ -97,6 +140,17 @@ export default function CommunityTabPage() {
     { label: "Saved Itineraries", value: 3 },
     { label: "Community Rank", value: "Explorer" },
   ];
+  const similarTravellers = useMemo(() => {
+    const byAuthor = new Map();
+    (data?.posts || []).forEach((post) => {
+      const authorName = post.author?.name || post.author;
+      if (!authorName || authorName === user?.name) return;
+      const prev = byAuthor.get(authorName) || { name: authorName, score: 0, destination: post.destinationName || "India" };
+      prev.score += (post.likesCount || 0) + (post.commentsCount || 0);
+      byAuthor.set(authorName, prev);
+    });
+    return Array.from(byAuthor.values()).sort((a, b) => b.score - a.score).slice(0, 4);
+  }, [data?.posts, user?.name]);
 
   return (
     <div className="community-root">
@@ -144,6 +198,20 @@ export default function CommunityTabPage() {
             <p>Get personalized itineraries and budget planning with AI.</p>
           </div>
           <button>Upgrade Now</button>
+        </div>
+        <div className="card community-panel">
+          <div className="community-panel-title">
+            <Sparkles size={20} /> Similar Travellers
+          </div>
+          <div className="activity-list">
+            {similarTravellers.length === 0 && <div className="profile-help">Post more to unlock matches.</div>}
+            {similarTravellers.map((traveller) => (
+              <div key={traveller.name} className="activity-row">
+                <span>{traveller.name}</span>
+                <strong>{traveller.destination}</strong>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -229,7 +297,11 @@ export default function CommunityTabPage() {
                     <h3 className="post-location">
                       {post.title} {post.isDemo && <MapPin size={16} color="var(--cl-text-muted)" />}
                     </h3>
-                    <p className="post-copy">{post.content || post.body}</p>
+                    <p className="post-copy">{summarizePost(post.content || post.body)}</p>
+                    <div className="post-tags">
+                      <span>{getTravelBadge(post)}</span>
+                      {post.destinationName && <span>#{post.destinationName.replace(/\s+/g, "")}</span>}
+                    </div>
 
                     {post.tags && (
                       <div className="post-tags">

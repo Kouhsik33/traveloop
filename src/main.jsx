@@ -20,11 +20,11 @@ void prepare().then(() => {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <ToastProvider>
-            <AuthBootstrap>
-              <BrowserRouter>
+            <BrowserRouter>
+              <AuthBootstrap>
                 <App />
-              </BrowserRouter>
-            </AuthBootstrap>
+              </AuthBootstrap>
+            </BrowserRouter>
           </ToastProvider>
         </ThemeProvider>
       </QueryClientProvider>

@@ -36,6 +36,8 @@ export interface User {
   name: string;
   username?: string | null;
   phoneNumber?: string | null;
+  emailVerifiedAt?: string | null;
+  phoneVerifiedAt?: string | null;
   avatarUrl?: string | null;
   bio?: string | null;
   travelerProfile: TravelerProfile;

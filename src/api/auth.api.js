@@ -33,3 +33,23 @@ export async function resetPassword(body) {
   const res = await apiClient.post(`/auth/reset-password`, body);
   return unwrap(res);
 }
+
+export async function deleteAccount(otp) {
+  const res = await apiClient.delete(`/users/delete-account`, { data: { otp } });
+  return unwrap(res);
+}
+
+export async function requestDeleteAccountOtp() {
+  const res = await apiClient.post(`/users/delete-account/request-otp`, {});
+  return unwrap(res);
+}
+
+export async function requestProfileVerificationOtp(body) {
+  const res = await apiClient.post(`/users/profile-verification/request-otp`, body);
+  return unwrap(res);
+}
+
+export async function verifyProfileOtp(body) {
+  const res = await apiClient.post(`/users/profile-verification/verify`, body);
+  return unwrap(res);
+}

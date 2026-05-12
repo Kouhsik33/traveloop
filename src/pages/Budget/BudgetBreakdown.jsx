@@ -6,6 +6,10 @@ import { getApiErrorMessage } from "@/api/client";
 import { QUERY_KEYS } from "@/lib/constants";
 import { getCityLabel, getStopCity, usd } from "@/lib/format";
 import { useBudget } from "@/hooks/useBudget";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { useAuthStore } from "@/store/authStore";
+import { buildAiContext } from "@/lib/aiContext";
+import { updateProfile } from "@/api/auth.api";
 import { useToast } from "@/components/shared/toast-context";
 import "@/styles/components/budget.css";
 import "@/styles/components/ui.css";
@@ -14,12 +18,35 @@ import { BarChart2, Lightbulb, AlertTriangle, Sparkles } from "lucide-react";
 export default function BudgetBreakdownPage() {
   const { id } = useParams();
   const { showToast } = useToast();
+  const user = useAuthStore((s) => s.user);
+  const { requestLocation, isLocating } = useGeolocation();
   const { data: trip } = useQuery({ queryKey: QUERY_KEYS.trip(id ?? ""), queryFn: () => getTrip(id), enabled: Boolean(id) });
   const { data: budget, isLoading, isError } = useBudget(id);
   const firstCity = getStopCity(trip?.stops?.[0]);
 
   const aiMutation = useMutation({
-    mutationFn: () => estimateBudget({ cityId: firstCity.id, cityName: getCityLabel(firstCity), vibe: trip?.vibe || "comfort" }),
+    mutationFn: async () => {
+      const coords = await requestLocation();
+      if (coords) {
+        await updateProfile({
+          travelPreferences: {
+            ...(user?.travelPreferences || {}),
+            currentLocation: coords,
+            locationCapturedAt: new Date().toISOString(),
+          },
+        }).catch(() => {});
+      }
+      return estimateBudget({
+        cityId: firstCity.id,
+        cityName: getCityLabel(firstCity),
+        vibe: trip?.vibe || "comfort",
+        tripType: trip?.tripType || "solo",
+        userContext: buildAiContext(user, {
+          currentLocation: coords || undefined,
+          groupSize: trip?.tripType === "group" ? 4 : 1,
+        }),
+      });
+    },
     onError: (err) => showToast(getApiErrorMessage(err), "error"),
   });
 
@@ -31,7 +58,7 @@ export default function BudgetBreakdownPage() {
     <div className="budget-root">
       <div className="budget-header">
         <h1 className="budget-title">Budget Breakdown</h1>
-        <button className="btn btn-primary" disabled={!firstCity || aiMutation.isPending} onClick={() => aiMutation.mutate()}><Sparkles size={16} /> AI Estimate</button>
+        <button className="btn btn-primary" disabled={!firstCity || aiMutation.isPending || isLocating} onClick={() => aiMutation.mutate()}><Sparkles size={16} /> {isLocating ? "Locating..." : "AI Estimate"}</button>
       </div>
 
       {isLoading ? <div className="empty-state">Loading budget...</div> : isError ? (

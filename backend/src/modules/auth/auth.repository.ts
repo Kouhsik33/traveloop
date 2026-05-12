@@ -3,7 +3,7 @@ import { prisma } from '../../config/prisma';
 
 export class AuthRepository {
   public findByEmail(email: string): Promise<User | null> {
-    return prisma.user.findUnique({ where: { email } });
+    return prisma.user.findFirst({ where: { email, isDeleted: false, deletedAt: null } });
   }
 
   public findByUsername(username: string): Promise<User | null> {
@@ -11,7 +11,7 @@ export class AuthRepository {
   }
 
   public findById(id: string): Promise<User | null> {
-    return prisma.user.findUnique({ where: { id } });
+    return prisma.user.findFirst({ where: { id, isDeleted: false, deletedAt: null } });
   }
 
   public createUser(input: {

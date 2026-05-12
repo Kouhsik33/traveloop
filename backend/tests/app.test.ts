@@ -37,7 +37,10 @@ jest.mock('../src/modules/notifications/notifications.service', () => ({
 
 jest.mock('../src/config/prisma', () => ({
   prisma: {
-    $queryRaw: jest.fn().mockResolvedValue([{ '?column?': 1 }])
+    $queryRaw: jest.fn().mockResolvedValue([{ '?column?': 1 }]),
+    user: {
+      findFirst: jest.fn().mockResolvedValue({ id: '11111111-1111-4111-8111-111111111111' })
+    }
   }
 }));
 

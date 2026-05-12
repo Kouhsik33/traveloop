@@ -21,6 +21,8 @@ const mapUser = (user: PrismaUser): User => ({
   name: user.name,
   username: user.username,
   phoneNumber: user.phoneNumber,
+  emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
+  phoneVerifiedAt: user.phoneVerifiedAt?.toISOString() ?? null,
   avatarUrl: user.avatarUrl,
   bio: user.bio,
   travelerProfile: user.travelerProfile as User['travelerProfile'],
@@ -88,6 +90,9 @@ export class AuthService {
     if (!user) {
       throw new AppError('Invalid credentials', 'UNAUTHORIZED', 401);
     }
+    if (user.isDeleted || user.deletedAt) {
+      throw new AppError('This account has been deleted', 'UNAUTHORIZED', 401);
+    }
 
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!valid) {
@@ -122,7 +127,15 @@ export class AuthService {
     const data: Prisma.UserUpdateInput = {};
     if (dto.name !== undefined) data.name = dto.name;
     if (dto.username !== undefined) data.username = dto.username;
-    if (dto.phoneNumber !== undefined) data.phoneNumber = normalizePhoneNumber(dto.phoneNumber) ?? null;
+    if (dto.phoneNumber !== undefined) {
+      const nextPhoneNumber = normalizePhoneNumber(dto.phoneNumber) ?? null;
+      data.phoneNumber = nextPhoneNumber;
+      if (nextPhoneNumber !== existingUser.phoneNumber) {
+        data.phoneVerifiedAt = null;
+        data.phoneVerificationOtpHash = null;
+        data.phoneVerificationOtpExpiresAt = null;
+      }
+    }
     if (dto.avatarUrl !== undefined) data.avatarUrl = dto.avatarUrl;
     if (dto.bio !== undefined) data.bio = dto.bio;
     if (dto.travelerProfile !== undefined) data.travelerProfile = dto.travelerProfile;

@@ -14,6 +14,8 @@ model User {
   name            String             @db.VarChar(100)
   username        String?            @unique @db.VarChar(40)
   phoneNumber     String?            @map("phone_number") @db.VarChar(20)
+  emailVerifiedAt DateTime?          @map("email_verified_at") @db.Timestamp(6)
+  phoneVerifiedAt DateTime?          @map("phone_verified_at") @db.Timestamp(6)
   avatarUrl       String?            @map("avatar_url") @db.Text
   bio             String?            @db.Text
   travelerProfile String             @default("solo") @map("traveler_profile") @db.VarChar(20)
@@ -23,8 +25,16 @@ model User {
   travelPreferences Json?            @map("travel_preferences")
   language        String             @default("en") @db.VarChar(10)
   isAdmin         Boolean            @default(false) @map("is_admin")
+  isDeleted       Boolean            @default(false) @map("is_deleted")
+  deletedAt       DateTime?          @map("deleted_at") @db.Timestamp(6)
   otpHash         String?            @map("otp_hash") @db.VarChar(255)
   otpExpiresAt    DateTime?          @map("otp_expires_at") @db.Timestamp(6)
+  deleteOtpHash   String?            @map("delete_otp_hash") @db.VarChar(255)
+  deleteOtpExpiresAt DateTime?       @map("delete_otp_expires_at") @db.Timestamp(6)
+  emailVerificationOtpHash String?   @map("email_verification_otp_hash") @db.VarChar(255)
+  emailVerificationOtpExpiresAt DateTime? @map("email_verification_otp_expires_at") @db.Timestamp(6)
+  phoneVerificationOtpHash String?   @map("phone_verification_otp_hash") @db.VarChar(255)
+  phoneVerificationOtpExpiresAt DateTime? @map("phone_verification_otp_expires_at") @db.Timestamp(6)
   createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamp(6)
   trips           Trip[]
@@ -36,6 +46,7 @@ model User {
   communityBookmarks CommunityBookmark[]
 
   @@index([email], map: "idx_users_email")
+  @@index([isDeleted], map: "idx_users_is_deleted")
   @@map("users")
 }
 

@@ -9,6 +9,9 @@ import { QUERY_KEYS, ROUTES } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
 import { useToast } from "@/components/shared/toast-context";
 import { useAuthStore } from "@/store/authStore";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { buildAiContext } from "@/lib/aiContext";
+import { updateProfile } from "@/api/auth.api";
 import { AiThinkingPanel } from "@/components/ai/AiThinkingPanel";
 import { SkeletonRow } from "@/components/shared/Skeleton";
 import "@/styles/components/packing.css";
@@ -27,6 +30,7 @@ export default function PackingChecklistPage() {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const user = useAuthStore((s) => s.user);
+  const { requestLocation, isLocating } = useGeolocation();
   const [draft, setDraft] = useState({ name: "", category: "Essentials" });
 
   const { data: trip } = useQuery({ queryKey: QUERY_KEYS.trip(id ?? ""), queryFn: () => getTrip(id), enabled: Boolean(id) });
@@ -43,13 +47,29 @@ export default function PackingChecklistPage() {
   const deleteMutation = useMutation({ mutationFn: (itemId) => deletePackingItem(id, itemId), onSuccess: invalidate, onError: (err) => showToast(getApiErrorMessage(err), "error") });
   
   const aiMutation = useMutation({
-    mutationFn: () => generatePackingList({
-      destination: trip?.title || "the trip",
-      days: daysBetween(formatDate(trip?.startDate), formatDate(trip?.endDate)),
-      tripType: trip?.tripType || "solo",
-      season: trip?.vibe || undefined,
-      userContext: `${user?.travelerProfile || "traveller"} packing for ${trip?.tripType || "travel"}`
-    }),
+    mutationFn: async () => {
+      const coords = await requestLocation();
+      if (coords) {
+        await updateProfile({
+          travelPreferences: {
+            ...(user?.travelPreferences || {}),
+            currentLocation: coords,
+            locationCapturedAt: new Date().toISOString(),
+          },
+        }).catch(() => {});
+      }
+      return generatePackingList({
+        destination: trip?.title || "the trip",
+        days: daysBetween(formatDate(trip?.startDate), formatDate(trip?.endDate)),
+        tripType: trip?.tripType || "solo",
+        season: trip?.vibe || undefined,
+        userContext: buildAiContext(user, {
+          currentLocation: coords || undefined,
+          interests: ["packing", trip?.vibe || "comfort"],
+          groupSize: trip?.tripType === "group" ? 4 : 1,
+        }),
+      });
+    },
     onSuccess: async (groups) => {
       for (const group of groups) {
         for (const item of group.items || []) {
@@ -94,7 +114,7 @@ export default function PackingChecklistPage() {
           <p style={{ color: "var(--cl-text-muted)", fontSize: "var(--fs-lg)", margin: 0 }}>Smart packing list for {trip?.title || "your upcoming trip"}.</p>
         </div>
         
-        <button className="btn" style={{ background: "linear-gradient(135deg, var(--cl-accent) 0%, #D86B50 100%)", color: "white", border: "none" }} disabled={!trip || aiMutation.isPending} onClick={() => aiMutation.mutate()}>
+        <button className="btn" style={{ background: "linear-gradient(135deg, var(--cl-accent) 0%, #D86B50 100%)", color: "white", border: "none" }} disabled={!trip || aiMutation.isPending || isLocating} onClick={() => aiMutation.mutate()}>
           <Sparkles size={16} /> Auto-generate List
         </button>
       </div>
