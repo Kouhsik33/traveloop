@@ -15,25 +15,27 @@
  * Frame naming: /images/ezgif-frame-001.jpg … ezgif-frame-144.jpg
  */
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useMemo } from "react";
+import { useTheme } from "@/components/layout/ThemeProvider";
 
 /* ─────────────────── Config ────────────────────────────────── */
 const TOTAL_FRAMES   = 120;
-const FRAME_PREFIX   = "/images/ezgif-frame-";
-const LERP_SPEED     = 0.14;   // Cinematic smoothness (lower = smoother/laggier)
+const LERP_SPEED     = 0.14;   // Cinematic smoothness
 const PRELOAD_BATCH  = 24;     // Frames per async batch
-const SCROLL_TRACK_CLASS = "hero-scroll-track"; // Must match CSS class on wrapper div
-
-/** Zero-pad: 5 → "005" */
+const SCROLL_TRACK_CLASS = "hero-scroll-track";
 const pad3 = (n) => String(n).padStart(3, "0");
 
-/** All 144 frame URLs in order */
-const FRAME_URLS = Array.from(
-  { length: TOTAL_FRAMES },
-  (_, i) => `${FRAME_PREFIX}${pad3(i + 1)}.jpg`
-);
-
 export default function HeroFrameCanvas() {
+  const { theme } = useTheme();
+  
+  const frameUrls = useMemo(() => {
+    const prefix = theme === "dark" ? "/darkmode-herosection/ezgif-frame-" : "/lightmode-herosection/ezgif-frame-";
+    return Array.from(
+      { length: TOTAL_FRAMES },
+      (_, i) => `${prefix}${pad3(i + 1)}.jpg`
+    );
+  }, [theme]);
+
   const canvasRef = useRef(null);
 
   const imagesRef = useRef(new Array(TOTAL_FRAMES).fill(null));
@@ -47,10 +49,10 @@ export default function HeroFrameCanvas() {
   });
 
   /* ────────────── Frame preloader ──────────────────────────── */
-  const preloadFrames = useCallback(async () => {
+  const preloadFrames = useCallback(async (urls) => {
     for (let start = 0; start < TOTAL_FRAMES; start += PRELOAD_BATCH) {
       const end   = Math.min(start + PRELOAD_BATCH, TOTAL_FRAMES);
-      const batch = FRAME_URLS.slice(start, end).map((url, bi) =>
+      const batch = urls.slice(start, end).map((url, bi) =>
         new Promise((resolve) => {
           const img  = new Image();
           img.src    = url;
@@ -98,13 +100,13 @@ export default function HeroFrameCanvas() {
       sw = img.naturalHeight * cR;
       sx = (img.naturalWidth - sw) / 2;
     } else {
-      // Image taller than canvas: crop from BOTTOM, show top (sy stays 0)
+      // Image taller than canvas: crop from top/bottom equally
       sh = img.naturalWidth / cR;
-      sy = 0; // ← TOP anchor — was (img.naturalHeight - sh) / 2
+      sy = (img.naturalHeight - sh) / 2; 
     }
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
   }, []);
 
   /* ────────────── RAF render loop ──────────────────────────── */
@@ -207,14 +209,19 @@ export default function HeroFrameCanvas() {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     resizeCanvas();
-    preloadFrames();
+    
+    // Reset preloader on theme/urls change
+    imagesRef.current = new Array(TOTAL_FRAMES).fill(null);
+    stateRef.current.loadedCount = 0;
+    stateRef.current.isReady = false;
+    preloadFrames(frameUrls);
 
     if (!prefersReduced) {
       stateRef.current.rafId = requestAnimationFrame(renderLoop);
     } else {
       // Just load and paint frame 0 for reduced-motion users
       const img = new Image();
-      img.src = FRAME_URLS[0];
+      img.src = frameUrls[0];
       img.onload = () => {
         imagesRef.current[0] = img;
         stateRef.current.isReady = true;

@@ -9,9 +9,18 @@ import "@/styles/components/ui.css";
 import "@/styles/components/create-trip.css";
 import { Rocket, AlertTriangle, X } from "lucide-react";
 
+const MOCK_ADS = [
+  { id: 1, title: "Fly to Paris for ₹35k", desc: "Limited time offer on round-trip flights from Delhi. Book now!", cta: "Book Flights", tag: "Ad" },
+  { id: 2, title: "Bali Luxury Villas", desc: "Get 40% off on premium stays in Ubud and Seminyak. All-inclusive.", cta: "View Deals", tag: "Ad" },
+  { id: 3, title: "Explorer's Backpack", desc: "The only bag you'll need for your 2026 adventures. Durable & sleek.", cta: "Shop Gear", tag: "Sponsored" },
+  { id: 4, title: "Travel Insurance from ₹499", desc: "Don't let mishaps ruin your trip. Comprehensive coverage globally.", cta: "Get Quote", tag: "Ad" },
+  { id: 5, title: "Rental Cars in Goa", desc: "Self-drive hatchbacks and SUVs starting at ₹1,200/day.", cta: "Rent Now", tag: "Ad" },
+];
+
 export default function CreateTripPage() {
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  const [ads] = useState(() => [...MOCK_ADS].sort(() => 0.5 - Math.random()).slice(0, 3));
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -64,78 +73,97 @@ export default function CreateTripPage() {
 
   return (
     <div className="create-trip-root">
-      <div className="create-trip-form-card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--sp-lg)" }}>
-          <div>
-            <h1 className="create-trip-title">Plan a New Trip</h1>
-            <p className="create-trip-sub">Set your destination shell and timing to unlock AI planning.</p>
+      <div className="create-trip-left">
+        <div className="create-trip-form-card">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--sp-lg)" }}>
+            <div>
+              <h1 className="create-trip-title">Plan a New Trip</h1>
+              <p className="create-trip-sub">Set your destination shell and timing to unlock AI planning.</p>
+            </div>
+            <Link to={ROUTES.trips} style={{ color: "var(--cl-text-on-surface)", padding: "var(--sp-xs)" }}><X size={24} /></Link>
           </div>
-          <Link to={ROUTES.trips} style={{ color: "var(--cl-text-muted)", padding: "var(--sp-xs)" }}><X size={24} /></Link>
+
+          {error && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(192,57,43,0.08)", border: "1px solid rgba(192,57,43,0.3)", borderRadius: "var(--br-xl)", padding: "var(--sp-sm) var(--sp-md)", marginBottom: "var(--sp-xl)" }}>
+              <div className="input-error-msg" style={{ display: "flex", gap: "var(--sp-xs)", margin: 0, alignItems: "center" }}>
+                <AlertTriangle size={16} /> {error}
+              </div>
+              <button type="button" onClick={bypass} className="btn btn-sm btn-ghost" style={{ fontSize: "var(--fs-xs)", color: "var(--cl-accent)" }}>
+                Skip →
+              </button>
+            </div>
+          )}
+
+          <form className="create-trip-fields" onSubmit={submit}>
+            <div className="input-wrap">
+              <label className="input-label" htmlFor="ct-title">Trip Title</label>
+              <input id="ct-title" className="input" autoFocus value={form.title} onChange={(e) => update("title", e.target.value)} placeholder="e.g., Summer in Rajasthan" />
+            </div>
+
+            <div className="input-wrap">
+              <label className="input-label" htmlFor="ct-description">Quick Notes (Optional)</label>
+              <textarea id="ct-description" className="input" rows={2} style={{ minHeight: "50px" }} value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="What's the vibe of this trip?" />
+            </div>
+
+            <div className="create-trip-row">
+              <div className="input-wrap">
+                <label className="input-label" htmlFor="ct-start">Departure</label>
+                <input id="ct-start" type="date" className="input" value={form.startDate} onChange={(e) => update("startDate", e.target.value)} />
+              </div>
+              <div className="input-wrap">
+                <label className="input-label" htmlFor="ct-end">Return</label>
+                <input id="ct-end" type="date" className="input" value={form.endDate} min={form.startDate} onChange={(e) => update("endDate", e.target.value)} />
+              </div>
+            </div>
+
+            <div className="create-trip-row">
+              <div className="input-wrap">
+                <label className="input-label" htmlFor="ct-type">Trip Category</label>
+                <select id="ct-type" className="input" value={form.tripType} onChange={(e) => update("tripType", e.target.value)}>
+                  {["solo", "couple", "family", "group", "adventure", "pilgrimage", "honeymoon", "business"].map((v) => <option key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</option>)}
+                </select>
+              </div>
+              <div className="input-wrap">
+                <label className="input-label" htmlFor="ct-vibe">Budget Preference</label>
+                <select id="ct-vibe" className="input" value={form.vibe} onChange={(e) => update("vibe", e.target.value)}>
+                  {["backpacker", "comfort", "luxury"].map((v) => <option key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="input-wrap">
+              <label className="input-label" htmlFor="ct-budget">Estimated Budget Cap (₹)</label>
+              <div style={{ position: "relative" }}>
+                <span style={{ position: "absolute", left: "var(--sp-md)", top: "50%", transform: "translateY(-50%)", color: "var(--cl-text-muted)", fontWeight: "bold" }}>₹</span>
+                <input id="ct-budget" type="number" min="0" className="input" style={{ paddingLeft: "var(--sp-xl)" }} value={form.budgetCapInr} onChange={(e) => update("budgetCapInr", e.target.value)} placeholder="e.g., 50000" />
+              </div>
+            </div>
+
+            <div className="create-trip-actions">
+              <Link to={ROUTES.trips} className="create-trip-btn-secondary">Cancel</Link>
+              <button type="submit" className="create-trip-btn-primary" disabled={mutation.isPending}>
+                {mutation.isPending ? "Creating..." : <>Create Itinerary <Rocket size={20} /></>}
+              </button>
+            </div>
+          </form>
         </div>
+      </div>
 
-        {error && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(192,57,43,0.08)", border: "1px solid rgba(192,57,43,0.3)", borderRadius: "var(--br-xl)", padding: "var(--sp-sm) var(--sp-md)", marginBottom: "var(--sp-xl)" }}>
-            <div className="input-error-msg" style={{ display: "flex", gap: "var(--sp-xs)", margin: 0, alignItems: "center" }}>
-              <AlertTriangle size={16} /> {error}
+      <div className="create-trip-right">
+        <div className="google-ads-label">Google Ads</div>
+        <div className="google-ads-container">
+          {ads.map((ad) => (
+            <div key={ad.id} className="mock-google-ad">
+              <div className="mock-ad-tag">{ad.tag}</div>
+              <h3 className="mock-ad-title">{ad.title}</h3>
+              <p className="mock-ad-desc">{ad.desc}</p>
+              <button className="mock-ad-btn">{ad.cta}</button>
             </div>
-            <button type="button" onClick={bypass} className="btn btn-sm btn-ghost" style={{ fontSize: "var(--fs-xs)", color: "var(--cl-accent)" }}>
-              Skip →
-            </button>
+          ))}
+          <div className="mock-ad-footer">
+            Ads by Google
           </div>
-        )}
-
-        <form className="create-trip-fields" onSubmit={submit}>
-          <div className="input-wrap">
-            <label className="input-label" htmlFor="ct-title">Trip Title</label>
-            <input id="ct-title" className="input" autoFocus value={form.title} onChange={(e) => update("title", e.target.value)} placeholder="e.g., Summer in Rajasthan" />
-          </div>
-
-          <div className="input-wrap">
-            <label className="input-label" htmlFor="ct-description">Quick Notes (Optional)</label>
-            <textarea id="ct-description" className="input" rows={2} style={{ minHeight: "80px" }} value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="What's the vibe of this trip?" />
-          </div>
-
-          <div className="create-trip-row">
-            <div className="input-wrap">
-              <label className="input-label" htmlFor="ct-start">Departure</label>
-              <input id="ct-start" type="date" className="input" value={form.startDate} onChange={(e) => update("startDate", e.target.value)} />
-            </div>
-            <div className="input-wrap">
-              <label className="input-label" htmlFor="ct-end">Return</label>
-              <input id="ct-end" type="date" className="input" value={form.endDate} min={form.startDate} onChange={(e) => update("endDate", e.target.value)} />
-            </div>
-          </div>
-
-          <div className="create-trip-row">
-            <div className="input-wrap">
-              <label className="input-label" htmlFor="ct-type">Trip Category</label>
-              <select id="ct-type" className="input" value={form.tripType} onChange={(e) => update("tripType", e.target.value)}>
-                {["solo", "couple", "family", "group", "adventure", "pilgrimage", "honeymoon", "business"].map((v) => <option key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</option>)}
-              </select>
-            </div>
-            <div className="input-wrap">
-              <label className="input-label" htmlFor="ct-vibe">Budget Preference</label>
-              <select id="ct-vibe" className="input" value={form.vibe} onChange={(e) => update("vibe", e.target.value)}>
-                {["backpacker", "comfort", "luxury"].map((v) => <option key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className="input-wrap">
-            <label className="input-label" htmlFor="ct-budget">Estimated Budget Cap (₹)</label>
-            <div style={{ position: "relative" }}>
-              <span style={{ position: "absolute", left: "var(--sp-md)", top: "50%", transform: "translateY(-50%)", color: "var(--cl-text-muted)", fontWeight: "bold" }}>₹</span>
-              <input id="ct-budget" type="number" min="0" className="input" style={{ paddingLeft: "var(--sp-xl)" }} value={form.budgetCapInr} onChange={(e) => update("budgetCapInr", e.target.value)} placeholder="e.g., 50000" />
-            </div>
-          </div>
-
-          <div className="create-trip-actions">
-            <Link to={ROUTES.trips} className="create-trip-btn-secondary">Cancel</Link>
-            <button type="submit" className="create-trip-btn-primary" disabled={mutation.isPending}>
-              {mutation.isPending ? "Creating..." : <>Create Itinerary <Rocket size={20} /></>}
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );

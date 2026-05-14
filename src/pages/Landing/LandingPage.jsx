@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/lib/constants";
 import { useTheme } from "@/components/layout/ThemeProvider";
@@ -40,6 +41,15 @@ const destinations = [
 
 export default function LandingPage() {
   const { theme, toggleTheme } = useTheme();
+  
+  // Track initial theme to detect changes for auto-reload
+  const initialTheme = useRef(theme);
+
+  useEffect(() => {
+    if (theme !== initialTheme.current) {
+      window.location.reload();
+    }
+  }, [theme]);
 
   return (
     <div style={{ background: "var(--cl-bg)" }}>
