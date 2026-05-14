@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle, Flame, Globe, Heart, MapPin, MessageCircle, Rocket, Share2, Sparkles, Star } from "lucide-react";
+import { CheckCircle, Flame, Globe, Heart, MapPin, MessageCircle, Rocket, Share2, Sparkles, Star, Send } from "lucide-react";
 import { addCommunityComment, createCommunityPost, getSimilarTravelers, listCommunityFeed, toggleCommunityLike } from "@/api/community.api";
 import { QUERY_KEYS, ROUTES } from "@/lib/constants";
-import { COMMUNITY_POSTS } from "@/lib/communityData";
+
 import { useAuthStore } from "@/store/authStore";
 import { SkeletonCard, SkeletonText } from "@/components/shared/Skeleton";
 import { SmartImage } from "@/components/shared/SmartImage";
@@ -85,23 +85,7 @@ export default function CommunityTabPage() {
   });
 
   const feedPosts = useMemo(() => {
-    const livePosts = data?.posts ?? [];
-    if (livePosts.length >= 5) return livePosts;
-
-    const demoPosts = COMMUNITY_POSTS.map((post) => ({
-      id: post.id,
-      title: post.location,
-      content: post.caption,
-      author: post.author,
-      heroImageUrl: post.image,
-      createdAt: post.createdAt,
-      likesCount: post.likes,
-      commentsCount: post.comments,
-      tags: post.tags,
-      isDemo: true,
-    }));
-
-    return [...livePosts, ...demoPosts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    return data?.posts ?? [];
   }, [data?.posts]);
 
   const publishPost = () => {
@@ -117,12 +101,10 @@ export default function CommunityTabPage() {
   };
 
   const likePost = (id) => {
-    if (id.startsWith("post_")) return;
     likeMutation.mutate(id);
   };
 
   const addComment = (id) => {
-    if (id.startsWith("post_")) return;
     const draft = commentDrafts[id]?.trim();
     if (!draft) return;
     commentMutation.mutate({ postId: id, body: draft });
@@ -356,12 +338,23 @@ export default function CommunityTabPage() {
                     {!post.isDemo && (
                       <div className="post-comment-form">
                         <div className="avatar comment-avatar">{initials}</div>
-                        <input
-                          value={commentDrafts[post.id] || ""}
-                          onChange={(e) => setCommentDrafts((cur) => ({ ...cur, [post.id]: e.target.value }))}
-                          placeholder="Add a comment..."
-                          onKeyDown={(e) => { if (e.key === "Enter") addComment(post.id); }}
-                        />
+                        <div className="comment-input-wrapper">
+                          <input
+                            value={commentDrafts[post.id] || ""}
+                            onChange={(e) => setCommentDrafts((cur) => ({ ...cur, [post.id]: e.target.value }))}
+                            placeholder="Add a comment..."
+                            onKeyDown={(e) => { if (e.key === "Enter") addComment(post.id); }}
+                            className="comment-input"
+                          />
+                          <button
+                            className="comment-submit-btn"
+                            onClick={() => addComment(post.id)}
+                            disabled={!commentDrafts[post.id]?.trim()}
+                            aria-label="Post comment"
+                          >
+                            <Send size={18} />
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>

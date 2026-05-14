@@ -95,31 +95,43 @@ export default function TripListPage() {
             {trips.map((trip) => {
               const meta = STATUS_META[trip.status] ?? STATUS_META.planning;
               return (
+<<<<<<< HEAD
                 <Link key={trip.id} to={ROUTES.tripDetail(trip.id)} className="card card-hover trip-list-card" style={{ padding: "var(--sp-md)", display: "flex", alignItems: "center", gap: "var(--sp-xl)", textDecoration: "none", color: "var(--cl-text-on-surface)", border: "1px solid var(--cl-border)", background: "var(--cl-surface)", borderRadius: "var(--br-xl)" }}>
                   <div className="trip-list-thumb" style={{ width: "120px", height: "80px", borderRadius: "var(--br-lg)", overflow: "hidden", flexShrink: 0 }} aria-hidden>
+=======
+                <Link key={trip.id} to={ROUTES.tripDetail(trip.id)} className="card card-hover trip-list-card" style={{ position: "relative", overflow: "hidden", minHeight: "320px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "var(--sp-2xl)", textDecoration: "none", border: "none", borderRadius: "var(--br-2xl)", boxShadow: "var(--shadow-md)" }}>
+                  <div style={{ position: "absolute", inset: 0, zIndex: 0 }} aria-hidden>
+>>>>>>> 748bbb8 (enchanced UI)
                     <SmartImage
                       src={trip.coverPhotoUrl}
                       fallbackSrc={getTripCardCoverUrl(trip)}
                       alt=""
-                      className="trip-list-thumb-img"
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.2) 100%)" }} />
                   </div>
                   
+<<<<<<< HEAD
                   <div style={{ flex: 1 }}>
                     <div className="trip-list-name" style={{ fontSize: "var(--fs-xl)", fontWeight: "var(--fw-bold)", marginBottom: "var(--sp-xs)" }}>{trip.title}</div>
                     <div className="trip-list-meta" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "var(--sp-lg)", color: "var(--cl-text-on-surface)", opacity: 0.7, fontSize: "var(--fs-sm)" }}>
+=======
+                  <div style={{ position: "relative", zIndex: 1, textAlign: "center", width: "100%" }}>
+                    <div className="trip-list-name" style={{ fontSize: "clamp(1.5rem, 3vw, 2.5rem)", fontWeight: "var(--fw-extrabold)", color: "white", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "var(--sp-md)", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>{trip.title}</div>
+                    
+                    <div className="trip-list-meta" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center", gap: "var(--sp-lg)", color: "rgba(255,255,255,0.9)", fontSize: "var(--fs-sm)", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
+>>>>>>> 748bbb8 (enchanced UI)
                       <span className="trip-list-meta-item" style={{ display: "flex", alignItems: "center", gap: "var(--sp-xs)" }}>
                         <span className={`trip-section-dot ${meta.dot}`} style={{ width: "8px", height: "8px", borderRadius: "50%", background: trip.status === "completed" ? "var(--cl-teal)" : trip.status === "ongoing" ? "var(--cl-warning)" : "var(--cl-accent)" }} /> 
                         <span style={{ fontWeight: "var(--fw-semibold)" }}>{meta.label}</span>
                       </span>
                       <span className="trip-list-meta-item" style={{ display: "flex", alignItems: "center", gap: "var(--sp-xs)" }}><Calendar size={16} /> {formatDate(trip.startDate)} to {formatDate(trip.endDate)}</span>
                       <span className="trip-list-meta-item" style={{ display: "flex", alignItems: "center", gap: "var(--sp-xs)" }}><MapPinned size={16} /> {trip.tripType}</span>
-                      {getTripBudget(trip) > 0 && <span className="trip-list-meta-item" style={{ display: "flex", alignItems: "center", gap: "var(--sp-xs)", color: "var(--cl-accent)", fontWeight: "var(--fw-bold)", marginLeft: "auto" }}><Banknote size={16} /> {usd(getTripBudget(trip))}</span>}
+                      {getTripBudget(trip) > 0 && <span className="trip-list-meta-item" style={{ display: "flex", alignItems: "center", gap: "var(--sp-xs)", color: "var(--cl-accent)", fontWeight: "var(--fw-bold)" }}><Banknote size={16} /> {usd(getTripBudget(trip))}</span>}
                     </div>
                   </div>
                   
-                  <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "var(--cl-bg-subtle)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--cl-text-muted)" }}>
+                  <div style={{ position: "absolute", bottom: "var(--sp-lg)", right: "var(--sp-lg)", zIndex: 1, width: "40px", height: "40px", borderRadius: "50%", background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", transition: "all 0.2s" }} className="trip-list-chevron">
                     <ChevronRight size={20} />
                   </div>
                 </Link>
